@@ -65,7 +65,9 @@ oh-no-selfhosted setup
 oh-no-selfhosted start
 ```
 
-`setup` writes and enables the macOS LaunchAgent or Linux user-systemd definition without starting it immediately. `start`, `stop`, and `restart` always manage that background service; none of them runs the server in the current terminal. Service registration is not hidden in a package `postinstall` side effect, which npm 12 blocks by default for global packages unless separately approved.
+`setup` writes and enables the macOS LaunchAgent or Linux user-systemd definition without starting it immediately. It writes the complete managed-service configuration, including the listen address, port, data and log directories, service label, package runtime path, and unsafe-plugin setting. Running `setup` again replaces that definition using the options and environment variables supplied to the new command; omitted values return to their defaults rather than preserving the previous definition. Run `restart` after reconfiguring a running service, or `start` if it is stopped.
+
+`start`, `stop`, and `restart` always manage the background service; none of them runs the server in the current terminal. Service registration is not hidden in a package `postinstall` side effect, which npm 12 blocks by default for global packages unless separately approved.
 
 The managed service binds to loopback and stores persistent data outside the npm package. Avoid running the installer through `npx`: npm's temporary execution cache is not a stable service location.
 
@@ -85,6 +87,17 @@ oh-no-selfhosted remove
 
 `update` installs the latest npm release and restarts the managed service only if it was already running. For a package-only update, use `oh-no-selfhosted update --no-restart`.
 
+### Local-network access
+
+The default `127.0.0.1` address accepts connections only from the host machine. To make the dashboard available to devices on a trusted local network, rewrite the managed-service definition to listen on all IPv4 interfaces and then apply it:
+
+```bash
+oh-no-selfhosted setup --host 0.0.0.0 --port 8787
+oh-no-selfhosted restart
+```
+
+If you use a non-default data directory, label, log directory, or unsafe-plugin setting, include those options again when rerunning `setup`. Open `http://<host-lan-ip>:8787` from another device. This application has no built-in user authentication, so do not expose port `8787` directly to the public internet; use an authenticated TLS reverse proxy for access outside a trusted LAN.
+
 ## Build and install a local package
 
 For an unreleased checkout, verify and install the local tarball:
@@ -103,12 +116,14 @@ oh-no-selfhosted start
 
 | Option / environment variable | Default | Purpose |
 |---|---:|---|
-| `--host`, `HOST` | `127.0.0.1` | Listen address. Use a reverse proxy for remote access. |
+| `--host`, `HOST` | `127.0.0.1` | Listen address. Use `0.0.0.0` only on a trusted LAN, or use a reverse proxy. |
 | `--port`, `PORT` | `8787` | HTTP port. |
 | `--data-dir`, `DATA_DIR` | platform data directory | SQLite database, installed plugins, uploads, and caches. |
+| `--log-dir`, `OH_NO_SELFHOSTED_LOG_DIR` | platform log directory | Managed-service stdout and stderr logs. |
+| `--label`, `OH_NO_SELFHOSTED_LABEL` | `com.oh-no-selfhosted` | LaunchAgent label or basis of the systemd unit name. |
+| `--allow-unsafe-plugins`, `ALLOW_UNSAFE_PLUGINS` | `false` | Allow unsandboxed external server plugins. |
 | `STATIC_DIR` | package `dist/` | Built frontend directory. |
 | `SERVE_STATIC` | `true` | Serve the frontend from the API process. |
-| `ALLOW_UNSAFE_PLUGINS` | `false` | Allow unsandboxed external server plugins. |
 | `INTEGRATION_PLUGIN_DIRS` | empty | Additional integration roots; used only when external plugins are enabled. |
 | `WIDGET_PLUGIN_DIRS` | empty | Additional widget roots; used only when external plugins are enabled. |
 
