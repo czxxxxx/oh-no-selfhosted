@@ -1,3 +1,6 @@
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   DEFAULT_LABEL,
@@ -11,6 +14,24 @@ import {
   resolveServiceConfig,
   updatePackage,
 } from "./serviceManager.mjs";
+
+function serviceFixture(platform) {
+  const root = mkdtempSync(join(tmpdir(), `oh-no-service-${platform}-`));
+  const homeDir = join(root, "home");
+  const packageRoot = join(root, "package");
+
+  mkdirSync(join(packageRoot, "dist"), { recursive: true });
+  mkdirSync(homeDir, { recursive: true });
+  writeFileSync(join(packageRoot, "dist", "index.html"), "<!doctype html>");
+  writeFileSync(join(packageRoot, "package.json"), JSON.stringify({ version: "0.1.2" }));
+
+  return {
+    cleanup: () => rmSync(root, { force: true, recursive: true }),
+    homeDir,
+    packageRoot,
+    root,
+  };
+}
 
 describe("oh-no-selfhosted service manager", () => {
   test("resolves default production service config for an installed npm package", () => {
@@ -143,57 +164,207 @@ describe("oh-no-selfhosted service manager", () => {
     expect(unit).toContain("WantedBy=default.target");
   });
 
-  test("updates the global npm package and restarts a running managed service", () => {
+  test("setup configures Linux auto-start while start, stop, and restart stay in the background", async () => {
+    const fixture = serviceFixture("linux");
     const calls = [];
     const output = [];
-    const versions = ["0.1.0", "0.1.1"];
-    const config = {
-      label: DEFAULT_LABEL,
-      packageRoot: "/usr/local/lib/node_modules/oh-no-selfhosted",
-      platform: "darwin",
+    const runCommand = (command, args, options) => {
+      calls.push({ args, command, options });
+      return { status: 0 };
+    };
+    const common = {
+      env: {},
+      homeDir: fixture.homeDir,
+      nodePath: "/usr/bin/node",
+      packageRoot: fixture.packageRoot,
+      platform: "linux",
+      runCommand,
+      stdout: { write: (message) => output.push(message) },
     };
 
-    const result = updatePackage(config, {
-      readVersion: () => versions.shift(),
-      runCommand(command, args, options) {
-        calls.push({ args, command, options });
-        return { status: 0 };
-      },
-      stdout: { write: (message) => output.push(message) },
-    });
+    try {
+      expect(await cliMain({ ...common, argv: ["setup"] })).toBe(0);
+      const unitPath = join(fixture.homeDir, ".config", "systemd", "user", "oh-no-selfhosted.service");
+      expect(existsSync(unitPath)).toBe(true);
+      expect(readFileSync(unitPath, "utf8")).toContain("WantedBy=default.target");
+      expect(calls).toEqual([
+        { args: ["--user", "daemon-reload"], command: "systemctl", options: undefined },
+        { args: ["--user", "enable", "oh-no-selfhosted.service"], command: "systemctl", options: undefined },
+      ]);
+      expect(calls.flatMap(({ args }) => args)).not.toContain("--now");
+      expect(output.join("")).toContain("Run \"oh-no-selfhosted start\" to start it now");
 
-    expect(result).toEqual({
-      currentVersion: "0.1.1",
-      previousVersion: "0.1.0",
-      restarted: true,
+      expect(await cliMain({ ...common, argv: ["start"] })).toBe(0);
+      expect(await cliMain({ ...common, argv: ["stop"] })).toBe(0);
+      expect(await cliMain({ ...common, argv: ["restart"] })).toBe(0);
+      expect(calls.slice(2)).toEqual([
+        { args: ["--user", "start", "oh-no-selfhosted.service"], command: "systemctl", options: undefined },
+        { args: ["--user", "stop", "oh-no-selfhosted.service"], command: "systemctl", options: undefined },
+        { args: ["--user", "restart", "oh-no-selfhosted.service"], command: "systemctl", options: undefined },
+      ]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("setup configures macOS auto-start while start, stop, and restart stay in the background", async () => {
+    const fixture = serviceFixture("darwin");
+    const calls = [];
+    const output = [];
+    const runCommand = (command, args, options) => {
+      calls.push({ args, command, options });
+      return { status: 0 };
+    };
+    const common = {
+      env: {},
+      homeDir: fixture.homeDir,
+      nodePath: "/usr/local/bin/node",
+      packageRoot: fixture.packageRoot,
+      platform: "darwin",
+      runCommand,
+      stdout: { write: (message) => output.push(message) },
+    };
+    const domain = `gui/${process.getuid?.() ?? ""}`;
+    const plistPath = join(fixture.homeDir, "Library", "LaunchAgents", `${DEFAULT_LABEL}.plist`);
+
+    try {
+      expect(await cliMain({ ...common, argv: ["setup"] })).toBe(0);
+      expect(existsSync(plistPath)).toBe(true);
+      expect(calls).toEqual([
+        {
+          args: ["enable", `${domain}/${DEFAULT_LABEL}`],
+          command: "launchctl",
+          options: { allowFailure: true, stdio: "pipe" },
+        },
+      ]);
+
+      expect(await cliMain({ ...common, argv: ["start"] })).toBe(0);
+      expect(calls.slice(1)).toEqual([
+        {
+          args: ["bootstrap", domain, plistPath],
+          command: "launchctl",
+          options: { allowFailure: true, stdio: "pipe" },
+        },
+        {
+          args: ["kickstart", "-k", `${domain}/${DEFAULT_LABEL}`],
+          command: "launchctl",
+          options: undefined,
+        },
+      ]);
+
+      expect(await cliMain({ ...common, argv: ["stop"] })).toBe(0);
+      expect(await cliMain({ ...common, argv: ["restart"] })).toBe(0);
+      expect(calls.slice(3)).toEqual([
+        {
+          args: ["bootout", domain, plistPath],
+          command: "launchctl",
+          options: { allowFailure: true, stdio: "pipe" },
+        },
+        {
+          args: ["bootout", domain, plistPath],
+          command: "launchctl",
+          options: { allowFailure: true, stdio: "pipe" },
+        },
+        {
+          args: ["bootstrap", domain, plistPath],
+          command: "launchctl",
+          options: undefined,
+        },
+        {
+          args: ["kickstart", "-k", `${domain}/${DEFAULT_LABEL}`],
+          command: "launchctl",
+          options: { allowFailure: true, stdio: "pipe" },
+        },
+      ]);
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("start requires setup and never falls back to a foreground process", async () => {
+    const fixture = serviceFixture("linux");
+    const errors = [];
+    const calls = [];
+
+    try {
+      const result = await cliMain({
+        argv: ["start"],
+        env: {},
+        homeDir: fixture.homeDir,
+        packageRoot: fixture.packageRoot,
+        platform: "linux",
+        runCommand: (...args) => calls.push(args),
+        stderr: { write: (message) => errors.push(message) },
+      });
+
+      expect(result).toBe(1);
+      expect(calls).toEqual([]);
+      expect(errors.join("")).toContain('Run "oh-no-selfhosted setup" first');
+    } finally {
+      fixture.cleanup();
+    }
+  });
+
+  test("updates the global npm package and restarts a running managed service", () => {
+    const fixture = serviceFixture("linux");
+    const calls = [];
+    const output = [];
+    const versions = ["0.1.1", "0.1.2"];
+    const config = resolveServiceConfig({
+      env: {},
+      homeDir: fixture.homeDir,
+      packageRoot: fixture.packageRoot,
+      platform: "linux",
     });
-    expect(calls).toEqual([
-      {
-        args: ["print", `gui/${process.getuid?.() ?? ""}/${DEFAULT_LABEL}`],
-        command: "launchctl",
-        options: { allowFailure: true, stdio: "pipe" },
-      },
-      {
-        args: ["install", "--global", "oh-no-selfhosted@latest"],
-        command: "npm",
-        options: undefined,
-      },
-      {
-        args: ["kickstart", "-k", `gui/${process.getuid?.() ?? ""}/${DEFAULT_LABEL}`],
-        command: "launchctl",
-        options: undefined,
-      },
-    ]);
-    expect(output.join("")).toContain("Updated oh-no-selfhosted from 0.1.0 to 0.1.1.");
-    expect(output.join("")).toContain(`Restarted ${DEFAULT_LABEL}.`);
+    const unitPath = join(fixture.homeDir, ".config", "systemd", "user", "oh-no-selfhosted.service");
+    mkdirSync(join(fixture.homeDir, ".config", "systemd", "user"), { recursive: true });
+    writeFileSync(unitPath, "[Service]\n");
+
+    try {
+      const result = updatePackage(config, {
+        readVersion: () => versions.shift(),
+        runCommand(command, args, options) {
+          calls.push({ args, command, options });
+          return { status: 0 };
+        },
+        stdout: { write: (message) => output.push(message) },
+      });
+
+      expect(result).toEqual({
+        currentVersion: "0.1.2",
+        previousVersion: "0.1.1",
+        restarted: true,
+      });
+      expect(calls).toEqual([
+        {
+          args: ["--user", "status", "oh-no-selfhosted.service", "--no-pager"],
+          command: "systemctl",
+          options: { allowFailure: true, stdio: "pipe" },
+        },
+        {
+          args: ["install", "--global", "oh-no-selfhosted@latest"],
+          command: "npm",
+          options: undefined,
+        },
+        {
+          args: ["--user", "restart", "oh-no-selfhosted.service"],
+          command: "systemctl",
+          options: undefined,
+        },
+      ]);
+      expect(output.join("")).toContain("Updated oh-no-selfhosted from 0.1.1 to 0.1.2.");
+    } finally {
+      fixture.cleanup();
+    }
   });
 
   test("updates without starting a stopped managed service", () => {
     const calls = [];
     const output = [];
-    const versions = ["0.1.0", "0.1.1"];
+    const versions = ["0.1.1", "0.1.2"];
 
     const result = updatePackage({
+      homeDir: "/home/alice",
       label: DEFAULT_LABEL,
       packageRoot: "/usr/lib/node_modules/oh-no-selfhosted",
       platform: "linux",
@@ -222,7 +393,7 @@ describe("oh-no-selfhosted service manager", () => {
   test("supports package-only updates and documents the update command", async () => {
     const calls = [];
     const output = [];
-    const versions = ["0.1.1", "0.1.1"];
+    const versions = ["0.1.2", "0.1.2"];
 
     const exitCode = await cliMain({
       argv: ["update", "--no-restart"],
@@ -246,14 +417,17 @@ describe("oh-no-selfhosted service manager", () => {
         options: undefined,
       },
     ]);
-    expect(output.join("")).toContain("already up to date at 0.1.1");
+    expect(output.join("")).toContain("already up to date at 0.1.2");
     expect(output.join("")).toContain("--no-restart");
 
     const help = [];
     await cliMain({ argv: ["--help"], stdout: { write: (message) => help.push(message) } });
     expect(help.join("")).toContain("oh-no-selfhosted update [--no-restart] [--label NAME]");
     expect(help.join("")).toContain("oh-no-selfhosted setup");
+    expect(help.join("")).toContain("oh-no-selfhosted stop");
     expect(help.join("")).toContain("oh-no-selfhosted remove");
+    expect(help.join("")).not.toContain("oh-no-selfhosted install");
+    expect(help.join("")).not.toContain("oh-no-selfhosted uninstall");
   });
 
   test("removes the managed service and global package while keeping user data", () => {

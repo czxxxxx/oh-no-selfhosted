@@ -98,16 +98,21 @@ try {
     throw new Error("Packaged artifact does not include the declared Apache-2.0 license");
   }
 
-  if (!cliHelp.includes("oh-no-selfhosted install")) {
-    throw new Error("Global package install did not expose the expected CLI");
-  }
-
   if (!cliHelp.includes("oh-no-selfhosted update")) {
     throw new Error("Global package install did not expose the update command");
   }
 
-  if (!cliHelp.includes("oh-no-selfhosted setup") || !cliHelp.includes("oh-no-selfhosted remove")) {
-    throw new Error("Global package install did not expose the setup and remove commands");
+  if (
+    !cliHelp.includes("oh-no-selfhosted setup") ||
+    !cliHelp.includes("oh-no-selfhosted start") ||
+    !cliHelp.includes("oh-no-selfhosted stop") ||
+    !cliHelp.includes("oh-no-selfhosted remove")
+  ) {
+    throw new Error("Global package install did not expose the background service lifecycle commands");
+  }
+
+  if (cliHelp.includes("oh-no-selfhosted install") || cliHelp.includes("oh-no-selfhosted uninstall")) {
+    throw new Error("Global package install still exposes removed legacy lifecycle commands");
   }
 
   serverProcess = spawn(

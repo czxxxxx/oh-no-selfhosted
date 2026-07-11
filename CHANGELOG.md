@@ -4,6 +4,13 @@ Significant changes will be documented here until automated GitHub Releases beco
 
 ## Unreleased
 
+## 0.1.2 - 2026-07-12
+
+- Made `setup` configure auto-start without starting the service immediately.
+- Changed `start`, `stop`, and `restart` to manage the background service exclusively.
+- Removed the legacy `install` and service-only `uninstall` CLI commands.
+- Kept `remove` as the safe one-command service cleanup and global package uninstall flow.
+
 ## 0.1.1 - 2026-07-12
 
 - Added `oh-no-selfhosted update` for npm self-updates with safe managed-service restart behavior.
