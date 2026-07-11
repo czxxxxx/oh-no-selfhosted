@@ -833,9 +833,6 @@ export function App() {
     const nextIndex = (index + globalSearchResults.length) % globalSearchResults.length;
 
     setGlobalSearchActiveIndex(nextIndex);
-    requestAnimationFrame(() => {
-      document.getElementById(`global-search-option-${nextIndex}`)?.focus();
-    });
   }
 
   async function reloadDashboardData() {
