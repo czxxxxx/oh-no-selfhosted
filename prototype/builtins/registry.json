@@ -1,0 +1,383 @@
+{
+  "$schema": "../plugin-sdk/registry.schema.json",
+  "version": 1,
+  "name": "Oh No Built-ins",
+  "apps": [
+    {
+      "id": "jellyfin",
+      "name": "jellyfin service adapter",
+      "path": "packages/service-adapters/jellyfin",
+      "version": "0.1.0"
+    },
+    {
+      "id": "portainer",
+      "name": "portainer service adapter",
+      "path": "packages/service-adapters/portainer",
+      "version": "0.1.0"
+    },
+    {
+      "id": "qbittorrent",
+      "name": "qbittorrent service adapter",
+      "path": "packages/service-adapters/qbittorrent",
+      "version": "0.1.0"
+    },
+    {
+      "id": "qnap",
+      "name": "qnap service adapter",
+      "path": "packages/service-adapters/qnap",
+      "version": "0.1.0"
+    }
+  ],
+  "integrations": [
+    {
+      "id": "codex-usage",
+      "name": "Codex Usage",
+      "path": "packages/integrations/codex-usage",
+      "version": "0.1.0"
+    },
+    {
+      "id": "weather",
+      "name": "Weather",
+      "path": "packages/integrations/weather",
+      "version": "0.1.0"
+    }
+  ],
+  "serviceTypes": [
+    {
+      "id": "jellyfin",
+      "name": "Jellyfin",
+      "description": "Media Server",
+      "category": "Media",
+      "color": "#7e5bef",
+      "iconKey": "jellyfin",
+      "aliases": [
+        "media",
+        "movie",
+        "video"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "jellyfin"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "immich",
+      "name": "Immich",
+      "description": "Photos",
+      "category": "Media",
+      "color": "#f25d4d",
+      "iconKey": "immich",
+      "aliases": [
+        "photo",
+        "album"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "immich"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "nextcloud",
+      "name": "Nextcloud",
+      "description": "Cloud Storage",
+      "category": "Cloud",
+      "color": "#1387d4",
+      "iconKey": "nextcloud",
+      "aliases": [
+        "cloud",
+        "files"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "nextcloud"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "home-assistant",
+      "name": "Home Assistant",
+      "description": "Home Automation",
+      "category": "Infrastructure",
+      "color": "#2ab5e8",
+      "iconKey": "home-assistant",
+      "aliases": [
+        "home",
+        "automation"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "home-assistant"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "vaultwarden",
+      "name": "Vaultwarden",
+      "description": "Password Manager",
+      "category": "Security",
+      "color": "#111827",
+      "iconKey": "vaultwarden",
+      "aliases": [
+        "password",
+        "bitwarden"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "vaultwarden"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "gitea",
+      "name": "Gitea",
+      "description": "Git Service",
+      "category": "Dev Tools",
+      "color": "#609926",
+      "iconKey": "gitea",
+      "aliases": [
+        "git",
+        "code"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "gitea"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "portainer",
+      "name": "Portainer",
+      "description": "Container Mgmt",
+      "category": "Infrastructure",
+      "color": "#13a9da",
+      "iconKey": "portainer",
+      "aliases": [
+        "docker",
+        "container"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "portainer"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "description": "Analytics",
+      "category": "Monitoring",
+      "color": "#f46800",
+      "iconKey": "grafana",
+      "aliases": [
+        "dashboard",
+        "metrics"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "grafana"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "nas",
+      "name": "NAS",
+      "description": "File Storage",
+      "category": "Cloud",
+      "color": "#8b95a1",
+      "iconKey": "nas",
+      "aliases": [
+        "storage",
+        "files"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "nas"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "qbittorrent",
+      "name": "qBittorrent",
+      "description": "Download Client",
+      "category": "Download",
+      "color": "#2f80d1",
+      "iconKey": "qbittorrent",
+      "aliases": [
+        "qbit",
+        "torrent",
+        "download"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "qbittorrent"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "paperless-ngx",
+      "name": "Paperless-ngx",
+      "description": "Document Mgmt",
+      "category": "Productivity",
+      "color": "#3f7f2b",
+      "iconKey": "paperless",
+      "aliases": [
+        "paperless",
+        "document",
+        "docs"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "paperless-ngx"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "prometheus",
+      "name": "Prometheus",
+      "description": "Monitoring",
+      "category": "Monitoring",
+      "color": "#e6522c",
+      "iconKey": "prometheus",
+      "aliases": [
+        "metrics",
+        "monitoring"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "prometheus"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "uptime-kuma",
+      "name": "Uptime Kuma",
+      "description": "Uptime Monitor",
+      "category": "Monitoring",
+      "color": "#70c163",
+      "iconKey": "uptime-kuma",
+      "aliases": [
+        "uptime",
+        "status"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "uptime-kuma"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "adguard-home",
+      "name": "AdGuard Home",
+      "description": "DNS & Ad Block",
+      "category": "Security",
+      "color": "#67b279",
+      "iconKey": "adguard-home",
+      "aliases": [
+        "dns",
+        "adblock"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "adguard-home"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "syncthing",
+      "name": "Syncthing",
+      "description": "File Sync",
+      "category": "Cloud",
+      "color": "#0f9cca",
+      "iconKey": "syncthing",
+      "aliases": [
+        "sync",
+        "files"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "syncthing"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "router",
+      "name": "Router",
+      "description": "Network Gateway",
+      "category": "Network",
+      "color": "#5b6ee1",
+      "iconKey": "router",
+      "aliases": [
+        "network",
+        "gateway"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "router"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "custom",
+      "name": "Custom URL",
+      "description": "Add any service by URL",
+      "category": "Custom",
+      "color": "#667085",
+      "iconKey": "custom",
+      "iconKind": "preset",
+      "aliases": [
+        "custom",
+        "url",
+        "website"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "custom"
+      ],
+      "version": "0.1.0"
+    }
+  ],
+  "widgets": [
+    {
+      "id": "oh-no.core-widgets",
+      "name": "Oh No Core Widgets",
+      "path": "packages/widgets/oh-no.core-widgets",
+      "version": "0.1.0"
+    }
+  ]
+}

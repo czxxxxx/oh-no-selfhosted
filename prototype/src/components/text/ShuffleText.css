@@ -1,0 +1,71 @@
+.shuffle-parent {
+  display: inline-block;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1;
+}
+
+.shuffle-visual {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.shuffle-char-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 1ch;
+  overflow: hidden;
+  vertical-align: baseline;
+}
+
+.shuffle-char-strip {
+  display: inline-flex;
+  transform: translate3d(calc(var(--shuffle-steps, 1) * -1ch), 0, 0);
+  animation: shuffle-slide-right var(--shuffle-duration, 0.35s) cubic-bezier(0.22, 1, 0.36, 1)
+    var(--shuffle-delay, 0s) both;
+  will-change: transform;
+}
+
+.shuffle-parent[data-shuffle-direction="down"] .shuffle-char-wrapper {
+  height: 1em;
+}
+
+.shuffle-parent[data-shuffle-direction="down"] .shuffle-char-strip {
+  flex-direction: column;
+  transform: translate3d(0, calc(var(--shuffle-steps, 1) * -1em), 0);
+  animation-name: shuffle-slide-down;
+}
+
+.shuffle-parent[data-shuffle-direction="down"] .shuffle-char {
+  flex-basis: 1em;
+  height: 1em;
+}
+
+.shuffle-char {
+  display: inline-block;
+  flex: 0 0 1ch;
+  width: 1ch;
+  text-align: center;
+  line-height: 1;
+}
+
+@keyframes shuffle-slide-right {
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes shuffle-slide-down {
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shuffle-char-strip {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+}

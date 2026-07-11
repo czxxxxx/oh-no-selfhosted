@@ -1,0 +1,15 @@
+{
+  "id": "qbittorrent",
+  "name": "qBittorrent Enhanced",
+  "version": "0.1.0",
+  "serviceTypes": ["qbittorrent"],
+  "description": "Transfer speed, torrent list, and queue health.",
+  "entry": "adapter.mjs",
+  "widgets": "widgets.json",
+  "configSchema": [
+    { "key": "baseUrl", "label": "Endpoint URL", "type": "url", "required": true, "defaultFromService": "url" },
+    { "key": "username", "label": "Username", "type": "text", "required": true },
+    { "key": "password", "label": "Password", "type": "password", "required": true },
+    { "key": "pollIntervalSeconds", "label": "Poll interval", "type": "number", "default": 5, "min": 2 }
+  ]
+}

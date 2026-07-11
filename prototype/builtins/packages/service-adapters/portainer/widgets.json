@@ -1,0 +1,59 @@
+[
+  {
+    "id": "container-summary",
+    "name": "Container Summary",
+    "description": "Running, stopped, and total container counts.",
+    "defaultLayout": { "w": 4, "h": 2 },
+    "minLayout": { "w": 3, "h": 2 },
+    "dataPath": "containers",
+    "renderer": "metric-list",
+    "fields": [
+      { "key": "running", "label": "Running", "format": "number" },
+      { "key": "stopped", "label": "Stopped", "format": "number" },
+      { "key": "total", "label": "Total", "format": "number" }
+    ]
+  },
+  {
+    "id": "container-list",
+    "name": "Containers",
+    "description": "Recent container state and image details.",
+    "defaultLayout": { "w": 7, "h": 3 },
+    "minLayout": { "w": 4, "h": 3 },
+    "dataPath": "containerRows",
+    "renderer": "table",
+    "fields": [
+      { "key": "name", "label": "Name", "format": "text" },
+      { "key": "state", "label": "State", "format": "text" },
+      { "key": "status", "label": "Status", "format": "text" },
+      { "key": "image", "label": "Image", "format": "text" }
+    ]
+  },
+  {
+    "id": "image-summary",
+    "name": "Image Summary",
+    "description": "Docker image count and total image size.",
+    "defaultLayout": { "w": 4, "h": 2 },
+    "minLayout": { "w": 3, "h": 2 },
+    "dataPath": "images",
+    "renderer": "metric-list",
+    "fields": [
+      { "key": "count", "label": "Images", "format": "number" },
+      { "key": "totalSizeBytes", "label": "Size", "format": "bytes" }
+    ]
+  },
+  {
+    "id": "engine-summary",
+    "name": "Docker Engine",
+    "description": "Docker version, OS, CPU, and memory capacity.",
+    "defaultLayout": { "w": 5, "h": 2 },
+    "minLayout": { "w": 4, "h": 2 },
+    "dataPath": "engine",
+    "renderer": "status-summary",
+    "fields": [
+      { "key": "serverVersion", "label": "Version", "format": "text" },
+      { "key": "operatingSystem", "label": "OS", "format": "text" },
+      { "key": "cpus", "label": "CPU", "format": "number" },
+      { "key": "memoryTotalBytes", "label": "Memory", "format": "bytes" }
+    ]
+  }
+]

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oh-no.dev/schemas/plugin-registry-v1.json",
+  "title": "Oh No Selfhosted plugin registry",
+  "type": "object",
+  "required": ["version", "name"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "apps": { "$ref": "#/$defs/codeContributions" },
+    "integrations": { "$ref": "#/$defs/codeContributions" },
+    "widgets": { "$ref": "#/$defs/codeContributions" },
+    "serviceTypes": { "type": "array", "items": { "type": "object", "required": ["id", "name"] } }
+  },
+  "$defs": {
+    "codeContributions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "path", "version"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+          "name": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" },
+          "requires": { "type": "array", "items": { "type": "object" } }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "anyOf": [
+    { "required": ["apps"] },
+    { "required": ["integrations"] },
+    { "required": ["widgets"] },
+    { "required": ["serviceTypes"] }
+  ],
+  "additionalProperties": true
+}

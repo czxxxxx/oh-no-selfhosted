@@ -1,0 +1,12 @@
+{
+  "id": "codex-usage",
+  "name": "Codex Usage",
+  "version": "0.1.0",
+  "description": "Local Codex subscription usage with 5h and 7d quota windows.",
+  "entry": "integration.mjs",
+  "templates": "templates.json",
+  "config": "Reads ~/.codex/auth.json on this server",
+  "color": "#10a37f",
+  "iconKey": "codex",
+  "iconKind": "preset"
+}

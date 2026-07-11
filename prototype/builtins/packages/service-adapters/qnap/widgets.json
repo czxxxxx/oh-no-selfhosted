@@ -1,0 +1,73 @@
+[
+  {
+    "id": "system-overview",
+    "name": "NAS Overview",
+    "description": "SNMP reachability, model, and uptime.",
+    "defaultLayout": { "w": 4, "h": 2 },
+    "minLayout": { "w": 3, "h": 2 },
+    "dataPath": "system",
+    "renderer": "status-summary",
+    "fields": [
+      { "key": "status", "label": "Status", "format": "text" },
+      { "key": "model", "label": "Model", "format": "text" },
+      { "key": "uptimeSeconds", "label": "Uptime", "format": "number" }
+    ]
+  },
+  {
+    "id": "resources",
+    "name": "NAS Resources",
+    "description": "CPU and memory utilization.",
+    "defaultLayout": { "w": 4, "h": 2 },
+    "minLayout": { "w": 3, "h": 2 },
+    "dataPath": "resources",
+    "renderer": "metric-list",
+    "fields": [
+      { "key": "cpuLoadPercent", "label": "CPU", "format": "percent" },
+      { "key": "memoryUsedPercent", "label": "Memory", "format": "percent" },
+      { "key": "memoryUsedBytes", "label": "Memory used", "format": "bytes" }
+    ]
+  },
+  {
+    "id": "storage-summary",
+    "name": "NAS Storage Summary",
+    "description": "Total NAS storage capacity and used space.",
+    "defaultLayout": { "w": 3, "h": 3 },
+    "minLayout": { "w": 2, "h": 2 },
+    "dataPath": "storage",
+    "renderer": "storage-donut",
+    "fields": [
+      { "key": "usedBytes", "label": "Used", "format": "bytes" },
+      { "key": "totalBytes", "label": "Total", "format": "bytes" }
+    ]
+  },
+  {
+    "id": "storage",
+    "name": "NAS Storage",
+    "description": "Storage volume usage.",
+    "defaultLayout": { "w": 6, "h": 3 },
+    "minLayout": { "w": 4, "h": 3 },
+    "dataPath": "storage",
+    "renderer": "table",
+    "fields": [
+      { "key": "name", "label": "Volume", "format": "text" },
+      { "key": "usedPercent", "label": "Used", "format": "percent" },
+      { "key": "usedBytes", "label": "Used size", "format": "bytes" },
+      { "key": "totalBytes", "label": "Total size", "format": "bytes" }
+    ]
+  },
+  {
+    "id": "network",
+    "name": "NAS Network",
+    "description": "Network interface status and counters.",
+    "defaultLayout": { "w": 6, "h": 3 },
+    "minLayout": { "w": 4, "h": 3 },
+    "dataPath": "network",
+    "renderer": "table",
+    "fields": [
+      { "key": "name", "label": "Interface", "format": "text" },
+      { "key": "status", "label": "Status", "format": "text" },
+      { "key": "rxBytes", "label": "RX", "format": "bytes" },
+      { "key": "txBytes", "label": "TX", "format": "bytes" }
+    ]
+  }
+]

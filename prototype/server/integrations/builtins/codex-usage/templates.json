@@ -1,0 +1,23 @@
+[
+  {
+    "id": "integration:codex-usage",
+    "name": "Codex Usage",
+    "description": "Local Codex subscription usage and reset windows.",
+    "defaultLayout": { "h": 3, "w": 4 },
+    "minLayout": { "h": 3, "w": 3 },
+    "dataPath": "",
+    "fields": [],
+    "renderer": "codex-usage",
+    "refreshIntervalSeconds": 300,
+    "defaultStyle": {
+      "accentColor": "#2f80d1",
+      "backgroundOpacity": 0.76,
+      "density": "comfortable",
+      "radius": 20,
+      "visual": "glass",
+      "showCategory": true,
+      "showDescription": true,
+      "showStatus": true
+    }
+  }
+]

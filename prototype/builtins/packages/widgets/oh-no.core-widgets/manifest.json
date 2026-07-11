@@ -1,0 +1,17 @@
+{
+  "apiVersion": "oh-no.dev/v1",
+  "capabilities": [
+    "host-navigation"
+  ],
+  "description": "Core service cards and local dashboard widgets.",
+  "id": "oh-no.core-widgets",
+  "kind": "widget",
+  "minHostVersion": "0.1.0",
+  "name": "Oh No Core Widgets",
+  "registration": "native",
+  "replaces": [
+    "oh-no.core-widgets"
+  ],
+  "version": "0.1.0",
+  "widgets": "widgets.json"
+}

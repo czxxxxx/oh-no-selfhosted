@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://oh-no.dev/schemas/plugin-manifest-v1.json",
+  "title": "Oh No Selfhosted plugin manifest",
+  "type": "object",
+  "required": ["apiVersion", "kind", "id", "name", "version", "description"],
+  "properties": {
+    "apiVersion": { "const": "oh-no.dev/v1" },
+    "kind": { "enum": ["widget", "integration", "service-adapter"] },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" },
+    "description": { "type": "string", "minLength": 1 },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": ["filesystem", "host-navigation", "host-refresh", "integration-state", "network", "process", "react", "service-state"]
+      }
+    },
+    "minHostVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "replaces": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "files": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "registration": { "enum": ["native", "plugin"] },
+    "requires": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "id"],
+        "properties": {
+          "kind": { "enum": ["widget", "integration", "service-adapter", "service-type"] },
+          "id": { "type": "string" },
+          "minVersion": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "frontend": {
+      "type": "object",
+      "required": ["entry"],
+      "properties": {
+        "entry": { "type": "string" },
+        "files": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "dependencies": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$" }
+        },
+        "styleIsolation": { "enum": ["scoped", "global"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}
