@@ -2,11 +2,13 @@ import { describe, expect, test } from "vitest";
 import {
   DEFAULT_LABEL,
   buildServerArgs,
+  cliMain,
   defaultDataDir,
   defaultLogDir,
   renderLaunchAgentPlist,
   renderSystemdUnit,
   resolveServiceConfig,
+  updatePackage,
 } from "./serviceManager.mjs";
 
 describe("oh-no-selfhosted service manager", () => {
@@ -138,5 +140,116 @@ describe("oh-no-selfhosted service manager", () => {
     expect(unit).toContain("ExecStart=/usr/bin/node --no-warnings=ExperimentalWarning /pkg/server/index.mjs --host 127.0.0.1 --port 9000 --data-dir /home/alice/.local/share/oh-no-selfhosted");
     expect(unit).toContain("Restart=always");
     expect(unit).toContain("WantedBy=default.target");
+  });
+
+  test("updates the global npm package and restarts a running managed service", () => {
+    const calls = [];
+    const output = [];
+    const versions = ["0.1.0", "0.1.1"];
+    const config = {
+      label: DEFAULT_LABEL,
+      packageRoot: "/usr/local/lib/node_modules/oh-no-selfhosted",
+      platform: "darwin",
+    };
+
+    const result = updatePackage(config, {
+      readVersion: () => versions.shift(),
+      runCommand(command, args, options) {
+        calls.push({ args, command, options });
+        return { status: 0 };
+      },
+      stdout: { write: (message) => output.push(message) },
+    });
+
+    expect(result).toEqual({
+      currentVersion: "0.1.1",
+      previousVersion: "0.1.0",
+      restarted: true,
+    });
+    expect(calls).toEqual([
+      {
+        args: ["print", `gui/${process.getuid?.() ?? ""}/${DEFAULT_LABEL}`],
+        command: "launchctl",
+        options: { allowFailure: true, stdio: "pipe" },
+      },
+      {
+        args: ["install", "--global", "oh-no-selfhosted@latest"],
+        command: "npm",
+        options: undefined,
+      },
+      {
+        args: ["kickstart", "-k", `gui/${process.getuid?.() ?? ""}/${DEFAULT_LABEL}`],
+        command: "launchctl",
+        options: undefined,
+      },
+    ]);
+    expect(output.join("")).toContain("Updated oh-no-selfhosted from 0.1.0 to 0.1.1.");
+    expect(output.join("")).toContain(`Restarted ${DEFAULT_LABEL}.`);
+  });
+
+  test("updates without starting a stopped managed service", () => {
+    const calls = [];
+    const output = [];
+    const versions = ["0.1.0", "0.1.1"];
+
+    const result = updatePackage({
+      label: DEFAULT_LABEL,
+      packageRoot: "/usr/lib/node_modules/oh-no-selfhosted",
+      platform: "linux",
+    }, {
+      readVersion: () => versions.shift(),
+      runCommand(command, args, options) {
+        calls.push({ args, command, options });
+        return { status: command === "systemctl" ? 3 : 0 };
+      },
+      stdout: { write: (message) => output.push(message) },
+    });
+
+    expect(result.restarted).toBe(false);
+    expect(calls).toHaveLength(2);
+    expect(calls[0]).toMatchObject({
+      args: ["--user", "status", "oh-no-selfhosted.service", "--no-pager"],
+      command: "systemctl",
+    });
+    expect(calls[1]).toMatchObject({
+      args: ["install", "--global", "oh-no-selfhosted@latest"],
+      command: "npm",
+    });
+    expect(output.join("")).toContain("without starting one");
+  });
+
+  test("supports package-only updates and documents the update command", async () => {
+    const calls = [];
+    const output = [];
+    const versions = ["0.1.1", "0.1.1"];
+
+    const exitCode = await cliMain({
+      argv: ["update", "--no-restart"],
+      env: {},
+      homeDir: "/Users/alice",
+      packageRoot: "/usr/local/lib/node_modules/oh-no-selfhosted",
+      platform: "darwin",
+      readVersion: () => versions.shift(),
+      runCommand(command, args, options) {
+        calls.push({ args, command, options });
+        return { status: 0 };
+      },
+      stdout: { write: (message) => output.push(message) },
+    });
+
+    expect(exitCode).toBe(0);
+    expect(calls).toEqual([
+      {
+        args: ["install", "--global", "oh-no-selfhosted@latest"],
+        command: "npm",
+        options: undefined,
+      },
+    ]);
+    expect(output.join("")).toContain("already up to date at 0.1.1");
+    expect(output.join("")).toContain("--no-restart");
+
+    const help = [];
+    await cliMain({ argv: ["--help"], stdout: { write: (message) => help.push(message) } });
+    expect(help.join("")).toContain("oh-no-selfhosted update [--no-restart] [--label NAME]");
   });
 });

@@ -24,7 +24,7 @@ For an unreleased checkout:
 npm ci
 npm run pack:check
 npm run pack:local
-npm install -g ./oh-no-selfhosted-0.1.0.tgz
+npm install -g ./oh-no-selfhosted-0.1.1.tgz
 oh-no-selfhosted install
 ```
 
@@ -35,11 +35,14 @@ The service binds to `127.0.0.1:8787` by default. Put it behind an authenticated
 ```bash
 oh-no-selfhosted status
 oh-no-selfhosted restart
+oh-no-selfhosted update
 oh-no-selfhosted uninstall
 oh-no-selfhosted start
 ```
 
 `uninstall` keeps the data directory.
+
+`update` installs `oh-no-selfhosted@latest` from npm. If a managed macOS or Linux service is running, it is restarted after the package upgrade. Use `oh-no-selfhosted update --no-restart` for a package-only update.
 
 ## External plugins
 

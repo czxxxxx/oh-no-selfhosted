@@ -67,11 +67,14 @@ Useful commands:
 ```bash
 oh-no-selfhosted status
 oh-no-selfhosted restart
+oh-no-selfhosted update
 oh-no-selfhosted uninstall
 oh-no-selfhosted start
 ```
 
 `uninstall` removes the service definition but keeps user data.
+
+`update` installs the latest npm release and restarts the managed service only if it was already running. For foreground or package-only updates, use `oh-no-selfhosted update --no-restart`.
 
 ## Build and install a local package
 
@@ -82,7 +85,7 @@ cd prototype
 npm ci
 npm run pack:check
 npm run pack:local
-npm install -g ./oh-no-selfhosted-0.1.0.tgz
+npm install -g ./oh-no-selfhosted-0.1.1.tgz
 oh-no-selfhosted install
 ```
 

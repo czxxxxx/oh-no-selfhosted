@@ -102,6 +102,10 @@ try {
     throw new Error("Global package install did not expose the expected CLI");
   }
 
+  if (!cliHelp.includes("oh-no-selfhosted update")) {
+    throw new Error("Global package install did not expose the update command");
+  }
+
   serverProcess = spawn(
     process.execPath,
     [

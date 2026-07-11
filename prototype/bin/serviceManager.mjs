@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -297,12 +297,12 @@ function uninstallDarwin(config) {
   rmSync(darwinPlistPath(config), { force: true });
 }
 
-function restartDarwin(config) {
-  run("launchctl", ["kickstart", "-k", `${DARWIN_DOMAIN()}/${config.label}`]);
+function restartDarwin(config, runCommand = run) {
+  runCommand("launchctl", ["kickstart", "-k", `${DARWIN_DOMAIN()}/${config.label}`]);
 }
 
-function statusDarwin(config) {
-  return run("launchctl", ["print", `${DARWIN_DOMAIN()}/${config.label}`], { allowFailure: true });
+function statusDarwin(config, runCommand = run, stdio = "inherit") {
+  return runCommand("launchctl", ["print", `${DARWIN_DOMAIN()}/${config.label}`], { allowFailure: true, stdio });
 }
 
 function installLinux(config) {
@@ -322,12 +322,12 @@ function uninstallLinux(config) {
   run("systemctl", ["--user", "daemon-reload"], { allowFailure: true, stdio: "pipe" });
 }
 
-function restartLinux(config) {
-  run("systemctl", ["--user", "restart", linuxUnitName(config)]);
+function restartLinux(config, runCommand = run) {
+  runCommand("systemctl", ["--user", "restart", linuxUnitName(config)]);
 }
 
-function statusLinux(config) {
-  return run("systemctl", ["--user", "status", linuxUnitName(config), "--no-pager"], { allowFailure: true });
+function statusLinux(config, runCommand = run, stdio = "inherit") {
+  return runCommand("systemctl", ["--user", "status", linuxUnitName(config), "--no-pager"], { allowFailure: true, stdio });
 }
 
 function installService(config) {
@@ -358,30 +358,75 @@ function uninstallService(config) {
   throw new Error(`Service uninstall is not supported on ${config.platform}.`);
 }
 
-function restartService(config) {
+function restartService(config, runCommand = run) {
   if (config.platform === "darwin") {
-    restartDarwin(config);
+    restartDarwin(config, runCommand);
     return;
   }
 
   if (config.platform === "linux") {
-    restartLinux(config);
+    restartLinux(config, runCommand);
     return;
   }
 
   throw new Error(`Service restart is not supported on ${config.platform}.`);
 }
 
-function statusService(config) {
+function statusService(config, runCommand = run, stdio = "inherit") {
   if (config.platform === "darwin") {
-    return statusDarwin(config);
+    return statusDarwin(config, runCommand, stdio);
   }
 
   if (config.platform === "linux") {
-    return statusLinux(config);
+    return statusLinux(config, runCommand, stdio);
   }
 
   throw new Error(`Service status is not supported on ${config.platform}.`);
+}
+
+export function readPackageVersion(packageRoot) {
+  const packageJson = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
+  return String(packageJson.version);
+}
+
+export function updatePackage(config, {
+  noRestart = false,
+  readVersion = readPackageVersion,
+  runCommand = run,
+  stdout = process.stdout,
+} = {}) {
+  const previousVersion = readVersion(config.packageRoot);
+  const canManageService = config.platform === "darwin" || config.platform === "linux";
+  const serviceWasRunning = !noRestart && canManageService
+    ? statusService(config, runCommand, "pipe").status === 0
+    : false;
+  const npmCommand = config.platform === "win32" ? "npm.cmd" : "npm";
+
+  stdout.write(`Updating ${PACKAGE_NAME} from ${previousVersion} to latest...\n`);
+  runCommand(npmCommand, ["install", "--global", `${PACKAGE_NAME}@latest`]);
+
+  const currentVersion = readVersion(config.packageRoot);
+  const versionMessage = currentVersion === previousVersion
+    ? `${PACKAGE_NAME} is already up to date at ${currentVersion}.`
+    : `Updated ${PACKAGE_NAME} from ${previousVersion} to ${currentVersion}.`;
+  stdout.write(`${versionMessage}\n`);
+
+  if (serviceWasRunning) {
+    restartService(config, runCommand);
+    stdout.write(`Restarted ${config.label}.\n`);
+  } else if (noRestart) {
+    stdout.write("Skipped service restart because --no-restart was provided.\n");
+  } else if (canManageService) {
+    stdout.write("No running managed service was detected; the package was updated without starting one.\n");
+  } else {
+    stdout.write("Restart the foreground process to use the updated package.\n");
+  }
+
+  return {
+    currentVersion,
+    previousVersion,
+    restarted: serviceWasRunning,
+  };
 }
 
 function startForeground(config) {
@@ -409,6 +454,7 @@ Usage:
   oh-no-selfhosted install [--host 127.0.0.1] [--port 8787] [--data-dir PATH] [--label NAME]
   oh-no-selfhosted status [--label NAME]
   oh-no-selfhosted restart [--label NAME]
+  oh-no-selfhosted update [--no-restart] [--label NAME]
   oh-no-selfhosted uninstall [--label NAME]
   oh-no-selfhosted start [--host 127.0.0.1] [--port 8787] [--data-dir PATH]
 
@@ -419,6 +465,7 @@ Commands:
   install     Install and start a production service. Uses macOS LaunchAgent or Linux user systemd.
   status      Print service manager status.
   restart     Restart the installed service.
+  update      Install the latest npm release and restart a running managed service.
   uninstall   Stop and remove the installed service definition. Data is kept.
   start       Run the production server in the foreground.
 
@@ -436,6 +483,8 @@ export async function cliMain({
   nodePath = process.execPath,
   packageRoot = packageRootFromImportMeta(),
   platform = process.platform,
+  readVersion = readPackageVersion,
+  runCommand = run,
   stderr = process.stderr,
   stdout = process.stdout,
 } = {}) {
@@ -469,13 +518,23 @@ export async function cliMain({
     }
 
     if (command === "restart") {
-      restartService(config);
+      restartService(config, runCommand);
       stdout.write(`Restarted ${config.label}\n`);
       return 0;
     }
 
+    if (command === "update") {
+      updatePackage(config, {
+        noRestart: flagEnabled(optionArgs, "no-restart"),
+        readVersion,
+        runCommand,
+        stdout,
+      });
+      return 0;
+    }
+
     if (command === "status") {
-      const result = statusService(config);
+      const result = statusService(config, runCommand);
       return result.status ?? 0;
     }
 
