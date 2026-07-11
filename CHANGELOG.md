@@ -7,6 +7,7 @@ Significant changes will be documented here until automated GitHub Releases beco
 ## 0.1.1 - 2026-07-12
 
 - Added `oh-no-selfhosted update` for npm self-updates with safe managed-service restart behavior.
+- Added clearer `setup` and one-command `remove` lifecycle commands while retaining the original aliases.
 - Added token-free npm publishing through GitHub Actions OIDC.
 - Added npm 12 install-script policy and package smoke-test compatibility.
 

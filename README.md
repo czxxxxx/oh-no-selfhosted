@@ -55,24 +55,26 @@ Open `http://127.0.0.1:8787`.
 Published releases install and register the service with one Bash line:
 
 ```bash
-npm install --global oh-no-selfhosted && oh-no-selfhosted install
+npm install --global oh-no-selfhosted && oh-no-selfhosted setup
 ```
 
-The `&&` ensures service registration runs only after the versioned package installs successfully. Registration remains an explicit CLI action rather than a package `postinstall` side effect.
+The npm command installs the CLI; `setup` explicitly registers and starts the managed service. The `&&` ensures registration runs only after the versioned package installs successfully. Service registration is not hidden in a package `postinstall` side effect, which npm 12 blocks by default for global packages unless separately approved.
 
 The managed service binds to loopback and stores persistent data outside the npm package. Avoid running the installer through `npx`: npm's temporary execution cache is not a stable service location.
 
 Useful commands:
 
 ```bash
+oh-no-selfhosted setup
 oh-no-selfhosted status
 oh-no-selfhosted restart
 oh-no-selfhosted update
+oh-no-selfhosted remove
 oh-no-selfhosted uninstall
 oh-no-selfhosted start
 ```
 
-`uninstall` removes the service definition but keeps user data.
+`remove` stops the managed service and uninstalls the global npm package in one command. `uninstall` removes only the service definition. Both keep user data.
 
 `update` installs the latest npm release and restarts the managed service only if it was already running. For foreground or package-only updates, use `oh-no-selfhosted update --no-restart`.
 
@@ -86,7 +88,7 @@ npm ci
 npm run pack:check
 npm run pack:local
 npm install -g ./oh-no-selfhosted-0.1.1.tgz
-oh-no-selfhosted install
+oh-no-selfhosted setup
 ```
 
 ## Configuration
