@@ -1350,7 +1350,7 @@ describe("Homelab navigation dashboard", () => {
     const topActions = document.querySelector(".top-actions");
     await user.click(within(topActions).getByRole("button", { name: /^open settings$/i }));
 
-    const settingsDialog = screen.getByRole("dialog", { name: /^settings$/i });
+    const settingsDialog = await screen.findByRole("dialog", { name: /^settings$/i });
     expect(settingsDialog).toBeInTheDocument();
     expect(within(settingsDialog).getByRole("radio", { name: /alpine lake/i })).toBeChecked();
     await user.click(within(settingsDialog).getByRole("radio", { name: /night server/i }));
@@ -1368,12 +1368,12 @@ describe("Homelab navigation dashboard", () => {
     expect(within(topActions).getByRole("button", { name: /^open settings$/i })).toHaveFocus();
 
     await user.click(within(topActions).getByRole("button", { name: /^open profile$/i }));
-    expect(screen.getByRole("dialog", { name: /^profile$/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /^profile$/i })).toBeInTheDocument();
     await user.keyboard("{Escape}");
 
     const launcher = screen.getByRole("navigation", { name: /primary service launcher/i });
     await user.click(within(launcher).getByRole("button", { name: /^open settings$/i }));
-    expect(screen.getByRole("dialog", { name: /^settings$/i })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: /^settings$/i })).toBeInTheDocument();
   });
 
   test("uploads, selects, and deletes a custom dashboard background", async () => {
