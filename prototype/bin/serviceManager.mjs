@@ -289,11 +289,11 @@ function installDarwin(config) {
   run("launchctl", ["kickstart", "-k", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
 }
 
-function uninstallDarwin(config) {
+function uninstallDarwin(config, runCommand = run) {
   const domain = DARWIN_DOMAIN();
 
-  run("launchctl", ["bootout", domain, darwinPlistPath(config)], { allowFailure: true, stdio: "pipe" });
-  run("launchctl", ["disable", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
+  runCommand("launchctl", ["bootout", domain, darwinPlistPath(config)], { allowFailure: true, stdio: "pipe" });
+  runCommand("launchctl", ["disable", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
   rmSync(darwinPlistPath(config), { force: true });
 }
 
@@ -316,10 +316,10 @@ function installLinux(config) {
   run("systemctl", ["--user", "enable", "--now", linuxUnitName(config)]);
 }
 
-function uninstallLinux(config) {
-  run("systemctl", ["--user", "disable", "--now", linuxUnitName(config)], { allowFailure: true, stdio: "pipe" });
+function uninstallLinux(config, runCommand = run) {
+  runCommand("systemctl", ["--user", "disable", "--now", linuxUnitName(config)], { allowFailure: true, stdio: "pipe" });
   rmSync(linuxUnitPath(config), { force: true });
-  run("systemctl", ["--user", "daemon-reload"], { allowFailure: true, stdio: "pipe" });
+  runCommand("systemctl", ["--user", "daemon-reload"], { allowFailure: true, stdio: "pipe" });
 }
 
 function restartLinux(config, runCommand = run) {
@@ -344,14 +344,14 @@ function installService(config) {
   throw new Error(`Service install is not supported on ${config.platform}. Use "oh-no-selfhosted start" instead.`);
 }
 
-function uninstallService(config) {
+function uninstallService(config, runCommand = run) {
   if (config.platform === "darwin") {
-    uninstallDarwin(config);
+    uninstallDarwin(config, runCommand);
     return;
   }
 
   if (config.platform === "linux") {
-    uninstallLinux(config);
+    uninstallLinux(config, runCommand);
     return;
   }
 
@@ -429,6 +429,24 @@ export function updatePackage(config, {
   };
 }
 
+export function removePackage(config, {
+  removeService = uninstallService,
+  runCommand = run,
+  stdout = process.stdout,
+} = {}) {
+  const canManageService = config.platform === "darwin" || config.platform === "linux";
+  const npmCommand = config.platform === "win32" ? "npm.cmd" : "npm";
+
+  stdout.write(`Removing ${PACKAGE_NAME} while keeping user data...\n`);
+
+  if (canManageService) {
+    removeService(config, runCommand);
+  }
+
+  runCommand(npmCommand, ["uninstall", "--global", PACKAGE_NAME]);
+  stdout.write(`Removed ${PACKAGE_NAME}; user data was not removed.\n`);
+}
+
 function startForeground(config) {
   assertPackagedAssets(config);
   ensurePrivateDirectory(config.dataDir, config.platform);
@@ -451,10 +469,12 @@ function helpText() {
   return `Oh No Selfhosted
 
 Usage:
-  oh-no-selfhosted install [--host 127.0.0.1] [--port 8787] [--data-dir PATH] [--label NAME]
+  oh-no-selfhosted setup [--host 127.0.0.1] [--port 8787] [--data-dir PATH] [--label NAME]
   oh-no-selfhosted status [--label NAME]
   oh-no-selfhosted restart [--label NAME]
   oh-no-selfhosted update [--no-restart] [--label NAME]
+  oh-no-selfhosted remove [--label NAME]
+  oh-no-selfhosted install [setup options]
   oh-no-selfhosted uninstall [--label NAME]
   oh-no-selfhosted start [--host 127.0.0.1] [--port 8787] [--data-dir PATH]
 
@@ -462,17 +482,19 @@ Safety:
   External server plugins are disabled by default. Use --allow-unsafe-plugins only after reviewing the source.
 
 Commands:
-  install     Install and start a production service. Uses macOS LaunchAgent or Linux user systemd.
+  setup       Register and start a production service. Uses macOS LaunchAgent or Linux user systemd.
   status      Print service manager status.
   restart     Restart the installed service.
   update      Install the latest npm release and restart a running managed service.
-  uninstall   Stop and remove the installed service definition. Data is kept.
+  remove      Stop the service and uninstall the global npm package. Data is kept.
+  install     Backward-compatible alias for setup.
+  uninstall   Remove only the managed service definition. Package and data are kept.
   start       Run the production server in the foreground.
 
 Local package flow:
   npm pack
   npm install -g ./oh-no-selfhosted-*.tgz
-  oh-no-selfhosted install
+  oh-no-selfhosted setup
 `;
 }
 
@@ -505,15 +527,20 @@ export async function cliMain({
   });
 
   try {
-    if (command === "install") {
+    if (command === "install" || command === "setup") {
       installService(config);
-      stdout.write(`Installed ${config.label} on ${config.host}:${config.port}\n`);
+      stdout.write(`Set up ${config.label} on ${config.host}:${config.port}\n`);
       return 0;
     }
 
     if (command === "uninstall") {
-      uninstallService(config);
+      uninstallService(config, runCommand);
       stdout.write(`Uninstalled ${config.label}; data directories are not removed.\n`);
+      return 0;
+    }
+
+    if (command === "remove") {
+      removePackage(config, { runCommand, stdout });
       return 0;
     }
 

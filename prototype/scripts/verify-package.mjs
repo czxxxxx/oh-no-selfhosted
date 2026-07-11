@@ -106,6 +106,10 @@ try {
     throw new Error("Global package install did not expose the update command");
   }
 
+  if (!cliHelp.includes("oh-no-selfhosted setup") || !cliHelp.includes("oh-no-selfhosted remove")) {
+    throw new Error("Global package install did not expose the setup and remove commands");
+  }
+
   serverProcess = spawn(
     process.execPath,
     [

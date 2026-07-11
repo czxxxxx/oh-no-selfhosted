@@ -5,6 +5,7 @@ import {
   cliMain,
   defaultDataDir,
   defaultLogDir,
+  removePackage,
   renderLaunchAgentPlist,
   renderSystemdUnit,
   resolveServiceConfig,
@@ -251,5 +252,39 @@ describe("oh-no-selfhosted service manager", () => {
     const help = [];
     await cliMain({ argv: ["--help"], stdout: { write: (message) => help.push(message) } });
     expect(help.join("")).toContain("oh-no-selfhosted update [--no-restart] [--label NAME]");
+    expect(help.join("")).toContain("oh-no-selfhosted setup");
+    expect(help.join("")).toContain("oh-no-selfhosted remove");
+  });
+
+  test("removes the managed service and global package while keeping user data", () => {
+    const calls = [];
+    const output = [];
+    const config = {
+      label: DEFAULT_LABEL,
+      packageRoot: "/usr/lib/node_modules/oh-no-selfhosted",
+      platform: "linux",
+    };
+
+    removePackage(config, {
+      removeService(serviceConfig, runCommand) {
+        calls.push({ command: "remove-service", serviceConfig });
+        expect(runCommand).toBeTypeOf("function");
+      },
+      runCommand(command, args, options) {
+        calls.push({ args, command, options });
+        return { status: 0 };
+      },
+      stdout: { write: (message) => output.push(message) },
+    });
+
+    expect(calls).toEqual([
+      { command: "remove-service", serviceConfig: config },
+      {
+        args: ["uninstall", "--global", "oh-no-selfhosted"],
+        command: "npm",
+        options: undefined,
+      },
+    ]);
+    expect(output.join("")).toContain("user data was not removed");
   });
 });
