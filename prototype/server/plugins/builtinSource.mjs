@@ -9,5 +9,7 @@ export const BUILTIN_REGISTRY_URL = pathToFileURL(BUILTIN_REGISTRY_PATH).href;
 export const BUILTIN_REGISTRY_ROOT = join(dirname(BUILTIN_REGISTRY_PATH));
 
 export function isBuiltInSource(source) {
-  return source?.sourceId === BUILTIN_REGISTRY_ID || source?.sourceRef === BUILTIN_REGISTRY_URL;
+  return source?.sourceType === "built-in" ||
+    source?.sourceId === BUILTIN_REGISTRY_ID ||
+    source?.sourceRef === BUILTIN_REGISTRY_URL;
 }

@@ -2900,6 +2900,41 @@ button {
   accent-color: #2f80d1;
 }
 
+.runtime-policy-value {
+  flex: 0 0 auto;
+  border: 1px solid rgba(23, 32, 43, 0.1);
+  border-radius: 999px;
+  padding: 7px 10px;
+  color: #445063;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.runtime-policy-value.is-disabled {
+  border-color: rgba(22, 101, 52, 0.2);
+  color: #166534;
+  background: rgba(220, 252, 231, 0.76);
+}
+
+.runtime-policy-value.is-enabled {
+  border-color: rgba(180, 83, 9, 0.24);
+  color: #92400e;
+  background: rgba(254, 243, 199, 0.78);
+}
+
+.runtime-policy-help {
+  margin: -6px 2px 0;
+  color: #66727e;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.runtime-policy-help code {
+  color: #17202b;
+  font-weight: 720;
+}
+
 .settings-overview-panel .field input,
 .settings-overview-panel .field select {
   height: 40px;
@@ -5556,6 +5591,23 @@ button {
 
 [data-theme="dark"] .settings-stats dd {
   color: #f6eee2;
+}
+
+[data-theme="dark"] .runtime-policy-value.is-disabled {
+  border-color: rgba(74, 222, 128, 0.24);
+  color: #86efac;
+  background: rgba(20, 83, 45, 0.28);
+}
+
+[data-theme="dark"] .runtime-policy-value.is-enabled {
+  border-color: rgba(244, 189, 99, 0.3);
+  color: #f7d89a;
+  background: rgba(120, 72, 18, 0.25);
+}
+
+[data-theme="dark"] .runtime-policy-help,
+[data-theme="dark"] .runtime-policy-help code {
+  color: #aeb8c3;
 }
 
 [data-theme="dark"] .service-type-list button {

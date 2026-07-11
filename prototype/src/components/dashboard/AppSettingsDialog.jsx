@@ -1,5 +1,6 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { FiCheckCircle, FiDownload, FiImage, FiSettings, FiTrash2, FiUploadCloud, FiUser, FiX } from "react-icons/fi";
+import { loadPluginRegistryRequest } from "../../apiClient.js";
 import { useDialogFocus } from "../useDialogFocus.js";
 
 const MAX_BACKGROUND_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -29,10 +30,33 @@ export function AppSettingsDialog({
   const titleRef = useRef(null);
   const [backgroundError, setBackgroundError] = useState("");
   const [deletingBackgroundId, setDeletingBackgroundId] = useState("");
+  const [externalPluginsEnabled, setExternalPluginsEnabled] = useState(null);
   const [isUploadingBackground, setIsUploadingBackground] = useState(false);
+  const [pluginPolicyError, setPluginPolicyError] = useState("");
   const title = mode === "profile" ? "Profile" : mode === "plugins" ? "Plugins" : "Settings";
 
   useDialogFocus(dialogRef, { fallbackFocusRef, initialFocusRef: titleRef, onClose });
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    loadPluginRegistryRequest()
+      .then((payload) => {
+        if (isCurrent) {
+          setExternalPluginsEnabled(payload.externalPluginsEnabled !== false);
+          setPluginPolicyError("");
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          setPluginPolicyError(error.message || "Unable to read plugin execution policy");
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, []);
 
   async function handleBackgroundUpload(event) {
     const file = event.target.files?.[0];
@@ -149,6 +173,34 @@ export function AppSettingsDialog({
                 onChange={onToggleTheme}
               />
             </label>
+            <div className="toggle-row runtime-policy-row">
+              <span>
+                <strong>External plugin execution</strong>
+                <small>Runtime safety flag for reviewed third-party server and React code</small>
+              </span>
+              <output
+                aria-label="External plugin execution status"
+                className={`runtime-policy-value ${
+                  externalPluginsEnabled === true
+                    ? "is-enabled"
+                    : externalPluginsEnabled === false
+                      ? "is-disabled"
+                      : "is-loading"
+                }`}
+              >
+                {externalPluginsEnabled === null
+                  ? pluginPolicyError
+                    ? "Unavailable"
+                    : "Checking…"
+                  : `allowUnsafePlugins=${externalPluginsEnabled}`}
+              </output>
+            </div>
+            {externalPluginsEnabled === false ? (
+              <p className="runtime-policy-help">
+                Built-in plugins remain enabled. To run reviewed third-party code, rerun <code>setup</code> with every
+                non-default service option plus <code>--allow-unsafe-plugins</code>, then run <code>restart</code>.
+              </p>
+            ) : null}
             <fieldset className="background-picker">
               <legend>Background</legend>
               <label className={`background-upload-control ${isUploadingBackground ? "is-uploading" : ""}`}>
@@ -235,4 +287,3 @@ export function AppSettingsDialog({
     </div>
   );
 }
-
