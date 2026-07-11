@@ -16,7 +16,7 @@ oh-no-selfhosted setup
 oh-no-selfhosted start
 ```
 
-The npm command installs the CLI. `setup` configures auto-start without starting the service immediately, and `start` launches it in the background. Registration remains explicit so `npm install` by itself never changes system services, and does not depend on lifecycle scripts blocked by npm 12.
+The npm command installs the CLI. `setup` writes and enables the complete managed-service definition without starting it immediately; this includes the host, port, data and log directories, label, package runtime path, and unsafe-plugin setting. Running `setup` again replaces the definition, and omitted options return to their defaults. Use `restart` after reconfiguring a running service, or `start` if it is stopped. Registration remains explicit so `npm install` by itself never changes system services, and does not depend on lifecycle scripts blocked by npm 12.
 
 ## Local package installation
 
@@ -34,6 +34,15 @@ oh-no-selfhosted start
 Do not install the managed service through `npx`; its package directory is a temporary cache location.
 
 The service binds to `127.0.0.1:8787` by default. Put it behind an authenticated TLS reverse proxy for remote access; do not expose it directly to the public internet.
+
+To allow access from a trusted local network:
+
+```bash
+oh-no-selfhosted setup --host 0.0.0.0 --port 8787
+oh-no-selfhosted restart
+```
+
+Include every non-default setting you want to preserve when rerunning `setup`, such as `--data-dir`, `--label`, `--log-dir`, or `--allow-unsafe-plugins`. Other devices can then open `http://<host-lan-ip>:8787`. The application has no built-in user authentication, so keep direct port exposure limited to a trusted LAN.
 
 ```bash
 oh-no-selfhosted setup
