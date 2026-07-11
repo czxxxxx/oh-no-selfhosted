@@ -1,0 +1,62 @@
+{
+  "id": "qnap",
+  "name": "QNAP Enhanced",
+  "version": "0.1.0",
+  "serviceTypes": ["qnap"],
+  "description": "NAS system, resource, storage, and network metrics over SNMP.",
+  "entry": "adapter.mjs",
+  "widgets": "widgets.json",
+  "configSchema": [
+    { "key": "baseUrl", "label": "Service URL", "type": "url", "required": true, "defaultFromService": "url" },
+    { "key": "host", "label": "SNMP host override", "type": "text" },
+    { "key": "port", "label": "SNMP port", "type": "number", "default": 161, "min": 1 },
+    {
+      "key": "snmpVersion",
+      "label": "SNMP version",
+      "type": "select",
+      "default": "v3",
+      "options": [
+        { "value": "v3", "label": "SNMPv3" },
+        { "value": "v2c", "label": "SNMPv2c" },
+        { "value": "v1", "label": "SNMPv1" }
+      ]
+    },
+    {
+      "key": "securityLevel",
+      "label": "SNMPv3 security",
+      "type": "select",
+      "default": "noAuthNoPriv",
+      "options": [
+        { "value": "noAuthNoPriv", "label": "No authentication / no privacy" },
+        { "value": "authNoPriv", "label": "Authentication only" },
+        { "value": "authPriv", "label": "Authentication + privacy" }
+      ]
+    },
+    { "key": "username", "label": "SNMPv3 username", "type": "text" },
+    {
+      "key": "authProtocol",
+      "label": "Authentication protocol",
+      "type": "select",
+      "default": "sha",
+      "options": [
+        { "value": "sha", "label": "SHA" },
+        { "value": "md5", "label": "MD5" }
+      ]
+    },
+    { "key": "authPassword", "label": "Authentication password", "type": "password" },
+    {
+      "key": "privacyProtocol",
+      "label": "Privacy protocol",
+      "type": "select",
+      "default": "aes",
+      "options": [
+        { "value": "aes", "label": "AES" },
+        { "value": "des", "label": "DES" }
+      ]
+    },
+    { "key": "privacyPassword", "label": "Privacy password", "type": "password" },
+    { "key": "community", "label": "SNMPv1/v2c community", "type": "password" },
+    { "key": "timeoutMs", "label": "Timeout", "type": "number", "default": 3000, "min": 500 },
+    { "key": "pollIntervalSeconds", "label": "Poll interval", "type": "number", "default": 15, "min": 5 }
+  ]
+}

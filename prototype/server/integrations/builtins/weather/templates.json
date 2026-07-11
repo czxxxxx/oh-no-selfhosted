@@ -1,0 +1,33 @@
+[
+  {
+    "id": "integration:weather-current",
+    "name": "Weather",
+    "description": "Current Open-Meteo conditions for a configured location.",
+    "defaultLayout": { "h": 3, "w": 2 },
+    "minLayout": { "h": 3, "w": 2 },
+    "configFields": [
+      {
+        "default": "Shanghai",
+        "helpText": "City, postal code, or address search term.",
+        "key": "location",
+        "label": "Location",
+        "required": true,
+        "type": "text"
+      }
+    ],
+    "dataPath": "",
+    "fields": [],
+    "renderer": "weather-current",
+    "refreshIntervalSeconds": 900,
+    "defaultStyle": {
+      "accentColor": "#d97706",
+      "backgroundOpacity": 0.72,
+      "density": "comfortable",
+      "radius": 18,
+      "visual": "glass",
+      "showCategory": true,
+      "showDescription": true,
+      "showStatus": true
+    }
+  }
+]

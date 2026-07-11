@@ -1,0 +1,68 @@
+{
+  "apiVersion": "oh-no.dev/v1",
+  "id": "portainer",
+  "name": "Portainer Enhanced",
+  "version": "0.1.0",
+  "serviceTypes": [
+    "portainer"
+  ],
+  "description": "Docker environment, container, and image metrics through the Portainer API.",
+  "entry": "adapter.mjs",
+  "widgets": "widgets.json",
+  "configSchema": [
+    {
+      "key": "baseUrl",
+      "label": "Service URL",
+      "type": "url",
+      "required": true,
+      "defaultFromService": "url"
+    },
+    {
+      "key": "endpointId",
+      "label": "Environment ID",
+      "type": "number",
+      "required": true,
+      "default": 1,
+      "min": 1
+    },
+    {
+      "key": "authMode",
+      "label": "Auth header",
+      "type": "select",
+      "default": "apiKey",
+      "options": [
+        {
+          "value": "apiKey",
+          "label": "X-API-Key"
+        },
+        {
+          "value": "bearer",
+          "label": "Bearer token"
+        }
+      ]
+    },
+    {
+      "key": "apiKey",
+      "label": "API key / access token",
+      "type": "password",
+      "required": true
+    },
+    {
+      "key": "pollIntervalSeconds",
+      "label": "Poll interval",
+      "type": "number",
+      "default": 10,
+      "min": 5
+    }
+  ],
+  "capabilities": [
+    "network",
+    "service-state"
+  ],
+  "dependencies": {},
+  "kind": "service-adapter",
+  "minHostVersion": "0.1.0",
+  "replaces": [
+    "portainer"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../../plugin-sdk/plugin-manifest.schema.json",
+  "apiVersion": "oh-no.dev/v1",
+  "kind": "widget",
+  "id": "example.hello",
+  "name": "Hello Widget",
+  "version": "0.1.0",
+  "minHostVersion": "0.1.0",
+  "description": "A minimal first-class React widget package.",
+  "capabilities": ["react"],
+  "frontend": {
+    "entry": "frontend.jsx",
+    "files": ["frontend.jsx", "widget.css"],
+    "styleIsolation": "scoped"
+  },
+  "widgets": "widgets.json"
+}

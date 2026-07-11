@@ -1,0 +1,13 @@
+[
+  {
+    "id": "recently-added",
+    "name": "Recently Added",
+    "description": "Latest media added to your Jellyfin library.",
+    "defaultLayout": { "w": 6, "h": 3 },
+    "minLayout": { "w": 4, "h": 3 },
+    "refreshIntervalSeconds": 60,
+    "dataPath": "recent",
+    "renderer": "recent-media-row",
+    "fields": []
+  }
+]

@@ -1,0 +1,47 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: prototype
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Use npm 12
+        run: npm install --global npm@12
+
+      - name: Verify release source and version
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+          node -e "const { version } = require('./package.json'); if (process.env.GITHUB_REF_NAME !== 'v' + version) { console.error('Tag must match package version: v' + version); process.exit(1); }"
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run pack:check
+      - run: npm publish --access public

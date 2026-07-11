@@ -1,0 +1,16 @@
+{
+  "$schema": "../../plugin-sdk/registry.schema.json",
+  "version": 1,
+  "name": "Oh No Example Plugins",
+  "apps": [],
+  "integrations": [],
+  "serviceTypes": [],
+  "widgets": [
+    {
+      "id": "example.hello",
+      "name": "Hello Widget",
+      "path": "widgets/example.hello",
+      "version": "0.1.0"
+    }
+  ]
+}

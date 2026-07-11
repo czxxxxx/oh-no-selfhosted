@@ -1,0 +1,14 @@
+[
+  {
+    "id": "hello",
+    "name": "Hello",
+    "description": "A configurable example React widget.",
+    "renderer": "react",
+    "component": "HelloWidget",
+    "defaultLayout": { "h": 2, "w": 3 },
+    "minLayout": { "h": 2, "w": 2 },
+    "configFields": [
+      { "key": "message", "label": "Message", "type": "text", "default": "Hello" }
+    ]
+  }
+]

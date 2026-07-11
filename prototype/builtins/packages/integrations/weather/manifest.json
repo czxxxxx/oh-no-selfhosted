@@ -1,0 +1,25 @@
+{
+  "apiVersion": "oh-no.dev/v1",
+  "id": "weather",
+  "name": "Weather",
+  "version": "0.1.0",
+  "description": "Current conditions from Open-Meteo for a configured location.",
+  "entry": "integration.mjs",
+  "templates": "templates.json",
+  "config": "Open-Meteo location search",
+  "color": "#d97706",
+  "iconKey": "weather",
+  "iconKind": "preset",
+  "capabilities": [
+    "integration-state",
+    "network"
+  ],
+  "files": [
+    "weather.mjs"
+  ],
+  "kind": "integration",
+  "minHostVersion": "0.1.0",
+  "replaces": [
+    "weather"
+  ]
+}

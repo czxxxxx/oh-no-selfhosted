@@ -1,0 +1,15 @@
+{
+  "id": "jellyfin",
+  "name": "Jellyfin Enhanced",
+  "version": "0.1.0",
+  "serviceTypes": ["jellyfin"],
+  "description": "Recently added Jellyfin media and poster artwork.",
+  "entry": "adapter.mjs",
+  "widgets": "widgets.json",
+  "configSchema": [
+    { "key": "baseUrl", "label": "Service URL", "type": "url", "required": true, "defaultFromService": "url" },
+    { "key": "apiKey", "label": "API key / access token", "type": "password", "required": true },
+    { "key": "userId", "label": "User ID", "type": "text" },
+    { "key": "pollIntervalSeconds", "label": "Poll interval", "type": "number", "default": 60, "min": 15 }
+  ]
+}
