@@ -48,6 +48,7 @@ describe("enhanced service refresh", () => {
     currentTime = "2026-07-03T00:00:06.000Z";
     await expect(
       refreshDueEnhancements({
+        allowUnsafePlugins: false,
         now: () => new Date(currentTime),
         runtime,
         store,
@@ -61,6 +62,7 @@ describe("enhanced service refresh", () => {
 
     currentTime = "2026-07-03T00:00:07.000Z";
     await refreshDueEnhancements({
+      allowUnsafePlugins: false,
       now: () => new Date(currentTime),
       runtime,
       store,

@@ -4,6 +4,13 @@ Significant changes will be documented here until automated GitHub Releases beco
 
 ## Unreleased
 
+## 0.1.3 - 2026-07-12
+
+- Fixed installed built-in service adapters being blocked after moving from a source checkout to the global npm package path.
+- Restored Jellyfin, qBittorrent, QNAP, and Portainer widget refreshes without enabling external plugin execution.
+- Added the current `allowUnsafePlugins` runtime status and safe CLI guidance to the dashboard Settings dialog.
+- Added a demo dashboard screenshot to the GitHub and npm package READMEs.
+
 ## 0.1.2 - 2026-07-12
 
 - Made `setup` configure auto-start without starting the service immediately.

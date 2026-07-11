@@ -1376,6 +1376,37 @@ describe("Homelab navigation dashboard", () => {
     expect(await screen.findByRole("dialog", { name: /^settings$/i })).toBeInTheDocument();
   });
 
+  test("shows the external plugin execution policy in Settings without exposing a web toggle", async () => {
+    const user = userEvent.setup();
+    const baseFetch = global.fetch;
+
+    global.fetch = vi.fn(async (url, options = {}) => {
+      if (url === "/api/plugins" && !options.method) {
+        return Response.json({
+          builtInRegistry: { id: "oh-no-builtins", name: "Built-ins" },
+          contributions: [],
+          externalPluginsEnabled: false,
+          invalidPlugins: [],
+          sources: [],
+        });
+      }
+
+      return baseFetch(url, options);
+    });
+
+    render(<App />);
+
+    await screen.findByText("Self-hosted home base");
+    await user.click(within(document.querySelector(".top-actions")).getByRole("button", { name: /^open settings$/i }));
+
+    const dialog = await screen.findByRole("dialog", { name: /^settings$/i });
+    expect(await within(dialog).findByLabelText("External plugin execution status")).toHaveTextContent(
+      "allowUnsafePlugins=false",
+    );
+    expect(within(dialog).getByText(/built-in plugins remain enabled/i)).toBeInTheDocument();
+    expect(within(dialog).queryByRole("checkbox", { name: /external plugin execution/i })).not.toBeInTheDocument();
+  });
+
   test("uploads, selects, and deletes a custom dashboard background", async () => {
     const user = userEvent.setup();
 
