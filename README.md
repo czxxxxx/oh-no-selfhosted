@@ -27,7 +27,7 @@ See [SECURITY.md](SECURITY.md) for the threat model and vulnerability reporting 
 
 - Node.js 22.5 or newer; current Node 22 and 24 releases are tested in CI.
 - npm 10 or newer.
-- macOS or Linux for managed service installation. Other platforms can use foreground mode.
+- macOS or Linux for managed background-service commands. Other platforms can run the source project with `npm start`.
 
 ## Run from source
 
@@ -52,13 +52,20 @@ Open `http://127.0.0.1:8787`.
 
 ## Install from npm
 
-Published releases install and register the service with one Bash line:
+Install the CLI directly from npm:
 
 ```bash
-npm install --global oh-no-selfhosted && oh-no-selfhosted setup
+npm install --global oh-no-selfhosted
 ```
 
-The npm command installs the CLI; `setup` explicitly registers and starts the managed service. The `&&` ensures registration runs only after the versioned package installs successfully. Service registration is not hidden in a package `postinstall` side effect, which npm 12 blocks by default for global packages unless separately approved.
+Then configure auto-start and launch the background service:
+
+```bash
+oh-no-selfhosted setup
+oh-no-selfhosted start
+```
+
+`setup` writes and enables the macOS LaunchAgent or Linux user-systemd definition without starting it immediately. `start`, `stop`, and `restart` always manage that background service; none of them runs the server in the current terminal. Service registration is not hidden in a package `postinstall` side effect, which npm 12 blocks by default for global packages unless separately approved.
 
 The managed service binds to loopback and stores persistent data outside the npm package. Avoid running the installer through `npx`: npm's temporary execution cache is not a stable service location.
 
@@ -66,17 +73,17 @@ Useful commands:
 
 ```bash
 oh-no-selfhosted setup
+oh-no-selfhosted start
+oh-no-selfhosted stop
 oh-no-selfhosted status
 oh-no-selfhosted restart
 oh-no-selfhosted update
 oh-no-selfhosted remove
-oh-no-selfhosted uninstall
-oh-no-selfhosted start
 ```
 
-`remove` stops the managed service and uninstalls the global npm package in one command. `uninstall` removes only the service definition. Both keep user data.
+`remove` stops the managed service, disables auto-start, removes its service definition, and uninstalls the global npm package. User data is kept. Running `npm uninstall --global oh-no-selfhosted` directly is safe only if `setup` was never used; otherwise it leaves a stale LaunchAgent or systemd unit behind.
 
-`update` installs the latest npm release and restarts the managed service only if it was already running. For foreground or package-only updates, use `oh-no-selfhosted update --no-restart`.
+`update` installs the latest npm release and restarts the managed service only if it was already running. For a package-only update, use `oh-no-selfhosted update --no-restart`.
 
 ## Build and install a local package
 
@@ -87,8 +94,9 @@ cd prototype
 npm ci
 npm run pack:check
 npm run pack:local
-npm install -g ./oh-no-selfhosted-0.1.1.tgz
+npm install -g ./oh-no-selfhosted-0.1.2.tgz
 oh-no-selfhosted setup
+oh-no-selfhosted start
 ```
 
 ## Configuration

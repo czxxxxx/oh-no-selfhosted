@@ -1,7 +1,7 @@
 {
   "name": "oh-no-selfhosted",
-  "version": "0.1.1",
-  "description": "Self-hosted services dashboard with a production service installer.",
+  "version": "0.1.2",
+  "description": "Self-hosted services dashboard with a managed background service.",
   "license": "Apache-2.0",
   "homepage": "https://github.com/czxxxxx/oh-no-selfhosted#readme",
   "bugs": {
@@ -97,10 +97,12 @@
     "prebuild": "npm run builtins:generate",
     "prepack": "npm run build",
     "start": "node --no-warnings=ExperimentalWarning server/index.mjs",
-    "service:install": "node bin/oh-no-selfhosted.mjs install",
+    "service:setup": "node bin/oh-no-selfhosted.mjs setup",
+    "service:start": "node bin/oh-no-selfhosted.mjs start",
+    "service:stop": "node bin/oh-no-selfhosted.mjs stop",
     "service:restart": "node bin/oh-no-selfhosted.mjs restart",
     "service:status": "node bin/oh-no-selfhosted.mjs status",
-    "service:uninstall": "node bin/oh-no-selfhosted.mjs uninstall",
+    "service:remove": "node bin/oh-no-selfhosted.mjs remove",
     "test": "node --no-warnings=ExperimentalWarning ./node_modules/vitest/vitest.mjs run",
     "test:layout": "node scripts/check-widget-layout.mjs",
     "preview": "vite preview --host 127.0.0.1"

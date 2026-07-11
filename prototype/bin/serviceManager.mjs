@@ -96,6 +96,7 @@ export function resolveServiceConfig({
   return {
     allowUnsafePlugins,
     dataDir,
+    homeDir,
     host,
     label,
     logDir,
@@ -247,7 +248,7 @@ function serviceFileName(config) {
 }
 
 function darwinPlistPath(config) {
-  return join(homedir(), "Library", "LaunchAgents", `${config.label}.plist`);
+  return join(config.homeDir, "Library", "LaunchAgents", `${config.label}.plist`);
 }
 
 function linuxUnitName(config) {
@@ -255,7 +256,7 @@ function linuxUnitName(config) {
 }
 
 function linuxUnitPath(config) {
-  return join(homedir(), ".config", "systemd", "user", linuxUnitName(config));
+  return join(config.homeDir, ".config", "systemd", "user", linuxUnitName(config));
 }
 
 function assertPackagedAssets(config) {
@@ -275,7 +276,7 @@ function ensurePrivateDirectory(path, platform = process.platform) {
   }
 }
 
-function installDarwin(config) {
+function setupDarwin(config, runCommand = run) {
   assertPackagedAssets(config);
   mkdirSync(dirname(darwinPlistPath(config)), { recursive: true });
   ensurePrivateDirectory(config.dataDir, config.platform);
@@ -283,10 +284,7 @@ function installDarwin(config) {
   writeFileSync(darwinPlistPath(config), renderLaunchAgentPlist(config));
 
   const domain = DARWIN_DOMAIN();
-  run("launchctl", ["bootout", domain, darwinPlistPath(config)], { allowFailure: true, stdio: "pipe" });
-  run("launchctl", ["enable", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
-  run("launchctl", ["bootstrap", domain, darwinPlistPath(config)]);
-  run("launchctl", ["kickstart", "-k", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
+  runCommand("launchctl", ["enable", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
 }
 
 function uninstallDarwin(config, runCommand = run) {
@@ -297,23 +295,41 @@ function uninstallDarwin(config, runCommand = run) {
   rmSync(darwinPlistPath(config), { force: true });
 }
 
+function startDarwin(config, runCommand = run) {
+  assertServiceConfigured(config);
+  const domain = DARWIN_DOMAIN();
+
+  runCommand("launchctl", ["bootstrap", domain, darwinPlistPath(config)], { allowFailure: true, stdio: "pipe" });
+  runCommand("launchctl", ["kickstart", "-k", `${domain}/${config.label}`]);
+}
+
+function stopDarwin(config, runCommand = run) {
+  assertServiceConfigured(config);
+  runCommand("launchctl", ["bootout", DARWIN_DOMAIN(), darwinPlistPath(config)], { allowFailure: true, stdio: "pipe" });
+}
+
 function restartDarwin(config, runCommand = run) {
-  runCommand("launchctl", ["kickstart", "-k", `${DARWIN_DOMAIN()}/${config.label}`]);
+  assertServiceConfigured(config);
+  const domain = DARWIN_DOMAIN();
+
+  runCommand("launchctl", ["bootout", domain, darwinPlistPath(config)], { allowFailure: true, stdio: "pipe" });
+  runCommand("launchctl", ["bootstrap", domain, darwinPlistPath(config)]);
+  runCommand("launchctl", ["kickstart", "-k", `${domain}/${config.label}`], { allowFailure: true, stdio: "pipe" });
 }
 
 function statusDarwin(config, runCommand = run, stdio = "inherit") {
   return runCommand("launchctl", ["print", `${DARWIN_DOMAIN()}/${config.label}`], { allowFailure: true, stdio });
 }
 
-function installLinux(config) {
+function setupLinux(config, runCommand = run) {
   assertPackagedAssets(config);
   mkdirSync(dirname(linuxUnitPath(config)), { recursive: true });
   ensurePrivateDirectory(config.dataDir, config.platform);
   ensurePrivateDirectory(config.logDir, config.platform);
   writeFileSync(linuxUnitPath(config), renderSystemdUnit(config));
 
-  run("systemctl", ["--user", "daemon-reload"]);
-  run("systemctl", ["--user", "enable", "--now", linuxUnitName(config)]);
+  runCommand("systemctl", ["--user", "daemon-reload"]);
+  runCommand("systemctl", ["--user", "enable", linuxUnitName(config)]);
 }
 
 function uninstallLinux(config, runCommand = run) {
@@ -322,7 +338,18 @@ function uninstallLinux(config, runCommand = run) {
   runCommand("systemctl", ["--user", "daemon-reload"], { allowFailure: true, stdio: "pipe" });
 }
 
+function startLinux(config, runCommand = run) {
+  assertServiceConfigured(config);
+  runCommand("systemctl", ["--user", "start", linuxUnitName(config)]);
+}
+
+function stopLinux(config, runCommand = run) {
+  assertServiceConfigured(config);
+  runCommand("systemctl", ["--user", "stop", linuxUnitName(config)]);
+}
+
 function restartLinux(config, runCommand = run) {
+  assertServiceConfigured(config);
   runCommand("systemctl", ["--user", "restart", linuxUnitName(config)]);
 }
 
@@ -330,18 +357,38 @@ function statusLinux(config, runCommand = run, stdio = "inherit") {
   return runCommand("systemctl", ["--user", "status", linuxUnitName(config), "--no-pager"], { allowFailure: true, stdio });
 }
 
-function installService(config) {
+function serviceDefinitionPath(config) {
   if (config.platform === "darwin") {
-    installDarwin(config);
+    return darwinPlistPath(config);
+  }
+
+  if (config.platform === "linux") {
+    return linuxUnitPath(config);
+  }
+
+  return "";
+}
+
+function assertServiceConfigured(config) {
+  const definitionPath = serviceDefinitionPath(config);
+
+  if (!definitionPath || !existsSync(definitionPath)) {
+    throw new Error(`Background service is not configured. Run "${PACKAGE_NAME} setup" first.`);
+  }
+}
+
+function setupService(config, runCommand = run) {
+  if (config.platform === "darwin") {
+    setupDarwin(config, runCommand);
     return;
   }
 
   if (config.platform === "linux") {
-    installLinux(config);
+    setupLinux(config, runCommand);
     return;
   }
 
-  throw new Error(`Service install is not supported on ${config.platform}. Use "oh-no-selfhosted start" instead.`);
+  throw new Error(`Background service setup is not supported on ${config.platform}.`);
 }
 
 function uninstallService(config, runCommand = run) {
@@ -356,6 +403,34 @@ function uninstallService(config, runCommand = run) {
   }
 
   throw new Error(`Service uninstall is not supported on ${config.platform}.`);
+}
+
+function startService(config, runCommand = run) {
+  if (config.platform === "darwin") {
+    startDarwin(config, runCommand);
+    return;
+  }
+
+  if (config.platform === "linux") {
+    startLinux(config, runCommand);
+    return;
+  }
+
+  throw new Error(`Background service start is not supported on ${config.platform}.`);
+}
+
+function stopService(config, runCommand = run) {
+  if (config.platform === "darwin") {
+    stopDarwin(config, runCommand);
+    return;
+  }
+
+  if (config.platform === "linux") {
+    stopLinux(config, runCommand);
+    return;
+  }
+
+  throw new Error(`Background service stop is not supported on ${config.platform}.`);
 }
 
 function restartService(config, runCommand = run) {
@@ -419,7 +494,7 @@ export function updatePackage(config, {
   } else if (canManageService) {
     stdout.write("No running managed service was detected; the package was updated without starting one.\n");
   } else {
-    stdout.write("Restart the foreground process to use the updated package.\n");
+    stdout.write("Restart the process that hosts the application to use the updated package.\n");
   }
 
   return {
@@ -447,54 +522,35 @@ export function removePackage(config, {
   stdout.write(`Removed ${PACKAGE_NAME}; user data was not removed.\n`);
 }
 
-function startForeground(config) {
-  assertPackagedAssets(config);
-  ensurePrivateDirectory(config.dataDir, config.platform);
-
-  const [nodePath, ...nodeArgs] = buildServerArgs(config);
-  const result = spawnSync(nodePath, nodeArgs, {
-    env: {
-      ...process.env,
-      DATA_DIR: config.dataDir,
-      NODE_ENV: "production",
-      SERVE_STATIC: "true",
-    },
-    stdio: "inherit",
-  });
-
-  return result.status ?? 1;
-}
-
 function helpText() {
   return `Oh No Selfhosted
 
 Usage:
   oh-no-selfhosted setup [--host 127.0.0.1] [--port 8787] [--data-dir PATH] [--label NAME]
+  oh-no-selfhosted start [--label NAME]
+  oh-no-selfhosted stop [--label NAME]
   oh-no-selfhosted status [--label NAME]
   oh-no-selfhosted restart [--label NAME]
   oh-no-selfhosted update [--no-restart] [--label NAME]
   oh-no-selfhosted remove [--label NAME]
-  oh-no-selfhosted install [setup options]
-  oh-no-selfhosted uninstall [--label NAME]
-  oh-no-selfhosted start [--host 127.0.0.1] [--port 8787] [--data-dir PATH]
 
 Safety:
   External server plugins are disabled by default. Use --allow-unsafe-plugins only after reviewing the source.
 
 Commands:
-  setup       Register and start a production service. Uses macOS LaunchAgent or Linux user systemd.
+  setup       Configure background auto-start without starting the service now.
+  start       Start the configured service in the background.
+  stop        Stop the background service without disabling auto-start.
   status      Print service manager status.
-  restart     Restart the installed service.
+  restart     Restart the configured background service.
   update      Install the latest npm release and restart a running managed service.
   remove      Stop the service and uninstall the global npm package. Data is kept.
-  install     Backward-compatible alias for setup.
-  uninstall   Remove only the managed service definition. Package and data are kept.
-  start       Run the production server in the foreground.
 
 Local package flow:
   npm pack
   npm install -g ./oh-no-selfhosted-*.tgz
   oh-no-selfhosted setup
+  oh-no-selfhosted start
 `;
 }
 
@@ -527,15 +583,22 @@ export async function cliMain({
   });
 
   try {
-    if (command === "install" || command === "setup") {
-      installService(config);
-      stdout.write(`Set up ${config.label} on ${config.host}:${config.port}\n`);
+    if (command === "setup") {
+      setupService(config, runCommand);
+      stdout.write(`Configured ${config.label} for background auto-start on ${config.host}:${config.port}.\n`);
+      stdout.write(`Run "${PACKAGE_NAME} start" to start it now.\n`);
       return 0;
     }
 
-    if (command === "uninstall") {
-      uninstallService(config, runCommand);
-      stdout.write(`Uninstalled ${config.label}; data directories are not removed.\n`);
+    if (command === "start") {
+      startService(config, runCommand);
+      stdout.write(`Started ${config.label} in the background.\n`);
+      return 0;
+    }
+
+    if (command === "stop") {
+      stopService(config, runCommand);
+      stdout.write(`Stopped ${config.label}; auto-start remains configured.\n`);
       return 0;
     }
 
@@ -563,10 +626,6 @@ export async function cliMain({
     if (command === "status") {
       const result = statusService(config, runCommand);
       return result.status ?? 0;
-    }
-
-    if (command === "start") {
-      return startForeground(config);
     }
 
     stderr.write(`Unknown command: ${command}\n\n${helpText()}`);
