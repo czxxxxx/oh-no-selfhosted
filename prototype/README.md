@@ -2,6 +2,10 @@
 
 Local-first homelab dashboard packaged as an npm CLI.
 
+![Oh No Selfhosted dashboard populated with demo homelab services and widgets](https://raw.githubusercontent.com/czxxxxx/oh-no-selfhosted/main/docs/assets/dashboard-demo.jpg)
+
+_Dashboard shown with isolated demo data._
+
 ## Requirements
 
 - Node.js 22.5 or newer.

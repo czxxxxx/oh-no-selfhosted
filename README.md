@@ -2,6 +2,10 @@
 
 A local-first dashboard for homelab services, widgets, integrations, and trusted extensions.
 
+![Oh No Selfhosted dashboard populated with demo homelab services and widgets](docs/assets/dashboard-demo.jpg)
+
+_Dashboard shown with isolated demo data._
+
 The project is pre-1.0. It is suitable for local evaluation and contribution, but configuration and plugin contracts may still change between releases.
 
 ## Highlights
