@@ -216,6 +216,26 @@
       "version": "0.1.0"
     },
     {
+      "id": "qnap",
+      "name": "QNAP",
+      "description": "NAS Storage",
+      "category": "Infrastructure",
+      "color": "#c2410c",
+      "iconKey": "qnap",
+      "aliases": [
+        "nas",
+        "storage",
+        "qnap.com"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "qnap"
+      ],
+      "version": "0.1.0"
+    },
+    {
       "id": "qbittorrent",
       "name": "qBittorrent",
       "description": "Download Client",
@@ -328,6 +348,26 @@
       "minHostVersion": "0.1.0",
       "replaces": [
         "syncthing"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "snapdrop",
+      "name": "Snapdrop",
+      "description": "Local File Transfer",
+      "category": "Network",
+      "color": "#047857",
+      "iconKey": "snapdrop",
+      "aliases": [
+        "airdrop",
+        "file transfer",
+        "snapdrop.net"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "snapdrop"
       ],
       "version": "0.1.0"
     },

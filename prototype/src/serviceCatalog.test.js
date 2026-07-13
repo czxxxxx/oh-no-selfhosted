@@ -11,6 +11,16 @@ describe("service catalog", () => {
       category: "Media",
       name: "Jellyfin",
     });
+    expect(SERVICE_TYPES.find((type) => type.id === "qnap")).toMatchObject({
+      iconKey: "qnap",
+      iconKind: "preset",
+      name: "QNAP",
+    });
+    expect(SERVICE_TYPES.find((type) => type.id === "snapdrop")).toMatchObject({
+      iconKey: "snapdrop",
+      iconKind: "preset",
+      name: "Snapdrop",
+    });
     expect(SERVICE_TYPES.at(-1)).toMatchObject({ id: "custom" });
   });
 });

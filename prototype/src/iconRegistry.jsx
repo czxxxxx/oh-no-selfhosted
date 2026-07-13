@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { FiActivity, FiCloud, FiFileText, FiGlobe, FiHardDrive, FiWifi } from "react-icons/fi";
 import {
   SiAdguard,
@@ -10,6 +11,7 @@ import {
   SiPortainer,
   SiPrometheus,
   SiQbittorrent,
+  SiQnap,
   SiSyncthing,
   SiVaultwarden,
 } from "react-icons/si";
@@ -33,6 +35,30 @@ export function OpenAIIcon(props) {
   );
 }
 
+export function SnapdropIcon(props) {
+  return (
+    <svg
+      data-snapdrop-logomark="true"
+      fill="none"
+      focusable="false"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        d="M5.1 8.4A8.2 8.2 0 0 1 12 4.7a8.2 8.2 0 0 1 6.9 3.7M7.7 11.1A5.1 5.1 0 0 1 12 8.8a5.1 5.1 0 0 1 4.3 2.3"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+      <path
+        d="M12 11.7a2.1 2.1 0 0 0-2.1 2.1c0 1.6 2.1 5.5 2.1 5.5s2.1-3.9 2.1-5.5a2.1 2.1 0 0 0-2.1-2.1Zm0 3a.9.9 0 1 1 0-1.8.9.9 0 0 1 0 1.8Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 export const iconComponents = {
   "adguard-home": SiAdguard,
   activity: FiActivity,
@@ -49,7 +75,9 @@ export const iconComponents = {
   portainer: SiPortainer,
   prometheus: SiPrometheus,
   qbittorrent: SiQbittorrent,
+  qnap: SiQnap,
   router: FiWifi,
+  snapdrop: SnapdropIcon,
   syncthing: SiSyncthing,
   "uptime-kuma": FiActivity,
   vaultwarden: SiVaultwarden,
@@ -58,7 +86,14 @@ export const iconComponents = {
 
 export function ServiceIcon({ service, compact = false }) {
   const Icon = iconComponents[service.iconKey] || FiGlobe;
-  const shouldUseImage = ["favicon", "url"].includes(service.iconKind) && service.iconUrl;
+  const imageUrl = ["favicon", "url"].includes(service.iconKind) ? service.iconUrl : null;
+  const isRemovedBundledIcon = String(imageUrl || "").startsWith("/heimdall-icons/");
+  const [imageFailed, setImageFailed] = useState(false);
+  const shouldUseImage = imageUrl && !isRemovedBundledIcon && !imageFailed;
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [imageUrl]);
 
   return (
     <span
@@ -67,7 +102,7 @@ export function ServiceIcon({ service, compact = false }) {
       data-icon-key={service.iconKey || "custom"}
       style={{ "--service-color": service.color || "#667085" }}
     >
-      {shouldUseImage ? <img alt="" src={service.iconUrl} /> : <Icon />}
+      {shouldUseImage ? <img alt="" src={imageUrl} onError={() => setImageFailed(true)} /> : <Icon />}
     </span>
   );
 }

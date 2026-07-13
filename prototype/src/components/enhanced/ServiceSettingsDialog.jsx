@@ -193,7 +193,7 @@ function OverviewTab({ onServiceSaved, service, serviceTypes }) {
           <FiUploadCloud aria-hidden="true" />
           {isUploadingIcon ? "Uploading..." : "Upload Icon"}
           <input
-            accept="image/png,image/jpeg,image/webp,image/x-icon"
+            accept="image/png,image/jpeg,image/webp,image/x-icon,image/svg+xml"
             aria-label="Upload service icon"
             disabled={isUploadingIcon}
             type="file"

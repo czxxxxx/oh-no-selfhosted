@@ -48,6 +48,39 @@ describe("service store", () => {
     });
   });
 
+  test("migrates removed QNAP and Snapdrop icon archive URLs to built-in presets", () => {
+    store = createServiceStore({ dataDir, now: () => "2026-07-03T00:00:00.000Z" });
+    store.createService({
+      iconKey: "qnap",
+      iconKind: "url",
+      iconUrl: "/heimdall-icons/qnap.png",
+      typeId: "qnap",
+      url: "http://nas.example.test",
+    });
+    store.createService({
+      iconKey: "snapdrop",
+      iconKind: "url",
+      iconUrl: "/heimdall-icons/snapdrop.png",
+      typeId: "snapdrop",
+      url: "http://share.example.test",
+    });
+    store.close();
+
+    store = createServiceStore({ dataDir, now: () => "2026-07-03T00:00:00.000Z" });
+
+    expect(store.listServices()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ iconKey: "qnap", iconKind: "preset", iconUrl: null, typeId: "qnap" }),
+        expect.objectContaining({
+          iconKey: "snapdrop",
+          iconKind: "preset",
+          iconUrl: null,
+          typeId: "snapdrop",
+        }),
+      ]),
+    );
+  });
+
   test("rejects non-http service URLs", () => {
     store = createServiceStore({ dataDir, now: () => "2026-07-03T00:00:00.000Z" });
 

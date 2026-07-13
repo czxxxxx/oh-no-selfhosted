@@ -413,17 +413,12 @@ function mockApi() {
     }
 
     if (url === "/api/icons" && options.method === "POST") {
-      const { dataUrl } = JSON.parse(options.body);
-      const uploadedIconUrl = dataUrl.startsWith("data:image/svg+xml;")
-        ? "/api/icons/uploaded-test.svg"
-        : "/api/icons/uploaded-test.png";
-
       return Response.json(
         {
           icon: {
             iconKey: "custom",
             iconKind: "url",
-            iconUrl: uploadedIconUrl,
+            iconUrl: "/api/icons/uploaded-test.png",
           },
         },
         { status: 201 },
@@ -1776,7 +1771,7 @@ describe("Homelab navigation dashboard", () => {
     });
   });
 
-  test("uploads a custom service icon from service settings", async () => {
+  test("uploads an SVG service icon and saves its rasterized PNG URL", async () => {
     const user = userEvent.setup();
 
     render(<App />);
@@ -1784,7 +1779,11 @@ describe("Homelab navigation dashboard", () => {
     await openServiceSettingsFromLaunchpad(user);
 
     const dialog = screen.getByRole("dialog", { name: /service settings/i });
-    const file = new File([new Uint8Array([137, 80, 78, 71])], "qbit.png", { type: "image/png" });
+    const file = new File(
+      ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/></svg>'],
+      "qbit.svg",
+      { type: "image/svg+xml" },
+    );
 
     await user.upload(within(dialog).getByLabelText(/upload service icon/i), file);
 
@@ -1798,6 +1797,7 @@ describe("Homelab navigation dashboard", () => {
     );
 
     expect(uploadCall).toBeTruthy();
+    expect(JSON.parse(uploadCall[1].body).dataUrl).toMatch(/^data:image\/svg\+xml;base64,/);
     expect(JSON.parse(saveCall[1].body)).toMatchObject({
       iconKind: "url",
       iconKey: "custom",

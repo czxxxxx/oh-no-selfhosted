@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import sharp from "sharp";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { createEnhancedTemplateId } from "../src/enhancedWidgetContract.js";
 import { createApiHandler as createServerApiHandler } from "./api.mjs";
@@ -354,7 +355,7 @@ describe("service API", () => {
     expect(fetchCalls).toEqual(["https://docs.home/favicon.ico"]);
   });
 
-  test("rejects active SVG custom service icons", async () => {
+  test("rasterizes SVG service icons to transparent PNG files", async () => {
     server = await listen(
       createApiHandler({
         dataDir,
@@ -363,7 +364,7 @@ describe("service API", () => {
       }),
     );
     const svg =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="#2563eb"/></svg>';
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5" fill="#2563eb"/></svg>';
 
     const uploadResponse = await fetch(`${server.baseUrl}/api/icons`, {
       body: JSON.stringify({
@@ -374,9 +375,76 @@ describe("service API", () => {
       method: "POST",
     });
 
+    expect(uploadResponse.status).toBe(201);
+    const { icon } = await uploadResponse.json();
+    expect(icon).toMatchObject({ iconKey: "custom", iconKind: "url" });
+    expect(icon.iconUrl).toMatch(/^\/api\/icons\/[a-f0-9]{64}\.png$/);
+
+    const iconResponse = await fetch(`${server.baseUrl}${icon.iconUrl}`);
+    expect(iconResponse.status).toBe(200);
+    expect(iconResponse.headers.get("content-type")).toBe("image/png");
+    const renderedBytes = Buffer.from(await iconResponse.arrayBuffer());
+    const metadata = await sharp(renderedBytes).metadata();
+    const { data: pixels, info } = await sharp(renderedBytes).raw().toBuffer({ resolveWithObject: true });
+    const cornerAlpha = pixels[3];
+    const centerAlpha = pixels[(128 * info.width + 128) * info.channels + 3];
+
+    expect(metadata).toMatchObject({ format: "png", hasAlpha: true, height: 256, width: 256 });
+    expect(cornerAlpha).toBe(0);
+    expect(centerAlpha).toBe(255);
+  });
+
+  test("rejects active or externally linked SVG service icons", async () => {
+    server = await listen(
+      createApiHandler({
+        dataDir,
+        fetchImpl: async () => new Response("missing", { status: 404 }),
+        store,
+      }),
+    );
+    const unsafeSvgs = [
+      '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect width="16" height="16" fill="url(https://example.test/icon.svg)"/></svg>',
+    ];
+
+    for (const svg of unsafeSvgs) {
+      const uploadResponse = await fetch(`${server.baseUrl}/api/icons`, {
+        body: JSON.stringify({
+          dataUrl: `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`,
+          filename: "service.svg",
+        }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      });
+
+      expect(uploadResponse.status).toBe(400);
+      await expect(uploadResponse.json()).resolves.toEqual({
+        error: "SVG icon contains unsupported active or external content",
+      });
+    }
+  });
+
+  test("rejects unsupported custom service icon formats with the SVG-aware message", async () => {
+    server = await listen(
+      createApiHandler({
+        dataDir,
+        fetchImpl: async () => new Response("missing", { status: 404 }),
+        store,
+      }),
+    );
+
+    const uploadResponse = await fetch(`${server.baseUrl}/api/icons`, {
+      body: JSON.stringify({
+        dataUrl: `data:image/gif;base64,${Buffer.from("GIF89a").toString("base64")}`,
+        filename: "service.gif",
+      }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
     expect(uploadResponse.status).toBe(400);
     await expect(uploadResponse.json()).resolves.toEqual({
-      error: "Icon upload must be PNG, JPG, WEBP, or ICO",
+      error: "Icon upload must be PNG, JPG, WEBP, ICO, or SVG",
     });
   });
 
@@ -1367,7 +1435,7 @@ export function EndpointStatusWidget({ data, onRefresh }) {
           integrations: 2,
           nativeWidgets: 9,
           serviceAdapters: 4,
-          serviceTypes: 17,
+          serviceTypes: 19,
         },
         status: "verified",
       },

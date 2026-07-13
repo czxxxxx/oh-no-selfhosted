@@ -95,6 +95,15 @@ const CURATED_SERVICE_TYPES = [
     aliases: ["storage", "files"],
   },
   {
+    id: "qnap",
+    name: "QNAP",
+    description: "NAS Storage",
+    category: "Infrastructure",
+    color: "#c2410c",
+    iconKey: "qnap",
+    aliases: ["nas", "storage", "qnap.com"],
+  },
+  {
     id: "qbittorrent",
     name: "qBittorrent",
     description: "Download Client",
@@ -147,6 +156,15 @@ const CURATED_SERVICE_TYPES = [
     color: "#0f9cca",
     iconKey: "syncthing",
     aliases: ["sync", "files"],
+  },
+  {
+    id: "snapdrop",
+    name: "Snapdrop",
+    description: "Local File Transfer",
+    category: "Network",
+    color: "#047857",
+    iconKey: "snapdrop",
+    aliases: ["airdrop", "file transfer", "snapdrop.net"],
   },
   {
     id: "router",

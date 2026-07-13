@@ -42,7 +42,7 @@ describe("built-in plugin registry", () => {
         integrations: 2,
         nativeWidgets: 9,
         serviceAdapters: 4,
-        serviceTypes: 17,
+        serviceTypes: 19,
       },
       id: "oh-no-builtins",
       sourceType: "local",

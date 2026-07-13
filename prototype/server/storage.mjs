@@ -198,6 +198,15 @@ export function createServiceStore({ dataDir, now = DEFAULT_NOW }) {
   ensureColumn("enhanced_registry_sources", "auth_token", "TEXT");
   ensureColumn("enhanced_adapters", "source_id", "TEXT");
 
+  database
+    .prepare(`
+      UPDATE services
+      SET icon_kind = 'preset', icon_key = type_id, icon_url = NULL
+      WHERE type_id IN ('qnap', 'snapdrop')
+        AND icon_url IN ('/heimdall-icons/qnap.png', '/heimdall-icons/snapdrop.png')
+    `)
+    .run();
+
   const insert = database.prepare(`
     INSERT INTO services (
       id,
