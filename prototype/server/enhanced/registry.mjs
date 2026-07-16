@@ -207,7 +207,11 @@ export function createEnhancedRegistry({ builtInRegistryUrl = BUILTIN_REGISTRY_U
 
           return requireValidAdapters(
             {
-              definitions: results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []),
+              definitions: results.flatMap((result) =>
+                result.status === "fulfilled"
+                  ? [{ ...result.value, sourceRef: builtInRegistryUrl, sourceType: "built-in" }]
+                  : [],
+              ),
               errors,
             },
             "Built-in service adapters failed validation",

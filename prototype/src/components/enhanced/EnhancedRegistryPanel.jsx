@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { FiDownloadCloud, FiRefreshCw, FiTrash2 } from "react-icons/fi";
 
+function sourceTypeLabel(sourceType) {
+  if (sourceType === "built-in") return "Built-in";
+  if (sourceType === "github") return "GitHub";
+  if (sourceType === "local") return "Local";
+
+  return sourceType;
+}
+
 export function EnhancedRegistryPanel({
   adapters,
   externalPluginsEnabled,
@@ -58,7 +66,7 @@ export function EnhancedRegistryPanel({
     <aside className="enhanced-registry-panel" aria-label="Enhanced Registry">
       <header>
         <strong>Enhanced Registry</strong>
-        <small>Built-in, local, and GitHub sources</small>
+        <small>Built-in adapters and optional external sources</small>
       </header>
 
       {externalPluginsEnabled ? (
@@ -101,9 +109,12 @@ export function EnhancedRegistryPanel({
         ) : null}
         </form>
       ) : (
-        <p className="registry-security-note" role="status">
-          External registries are disabled. Restart with --allow-unsafe-plugins to enable trusted third-party code.
-        </p>
+        <aside className="registry-policy-note" role="status">
+          <strong>Built-in adapters remain available.</strong>
+          <span>
+            External registries are off. Restart with --allow-unsafe-plugins only to add trusted third-party code.
+          </span>
+        </aside>
       )}
 
       <div className="registry-source-list">
@@ -145,7 +156,7 @@ export function EnhancedRegistryPanel({
                 <span>
                   <strong>{adapter.name}</strong>
                   <small>
-                    {supportsService ? adapter.sourceType : "Not for this service"}
+                    {supportsService ? sourceTypeLabel(adapter.sourceType) : "Not for this service"}
                     {adapter.installed ? " · installed" : ""}
                   </small>
                 </span>

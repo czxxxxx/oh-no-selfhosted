@@ -4,6 +4,12 @@ Significant changes will be documented here until automated GitHub Releases beco
 
 ## Unreleased
 
+## 0.1.5 - 2026-07-17
+
+- Fixed built-in enhanced adapters being misidentified as external local plugins, so Transmission can be installed and executed without enabling unsafe third-party plugins.
+- Fixed enhanced adapter installation responses so the Registry immediately reflects the installed state.
+- Improved Enhanced Registry contrast in dark mode and clarified that disabling external registries does not disable built-in adapters.
+
 ## 0.1.4 - 2026-07-16
 
 - Added Transmission as a built-in download service with its official mark and enhanced transfer, torrent, and queue widgets matching the qBittorrent experience.
