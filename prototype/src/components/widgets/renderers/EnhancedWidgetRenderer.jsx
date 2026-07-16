@@ -134,7 +134,7 @@ function normalizedProgress(value) {
   return Math.min(Math.max(number <= 1 ? number * 100 : number, 0), 100);
 }
 
-function QbittorrentOpsCard({ data, fields }) {
+function TorrentOpsCard({ data, fields, sourceLabel }) {
   const downloadField = fields.find((field) => field.key === "downloadSpeed") || {
     format: "bytesPerSecond",
     key: "downloadSpeed",
@@ -151,7 +151,14 @@ function QbittorrentOpsCard({ data, fields }) {
   const hasLiveTransfer = activeTorrents.some(
     (torrent) => Number(torrent.downloadSpeed || 0) > 0 || Number(torrent.uploadSpeed || 0) > 0,
   );
-  const activeSectionLabel = activeTorrents.length && !hasLiveTransfer ? "Seeding Queue" : "Active Transfers";
+  const onlySeeding = activeTorrents.every((torrent) =>
+    String(torrent.status || torrent.state || "").toLowerCase().includes("seed"),
+  );
+  const activeSectionLabel = activeTorrents.length && !hasLiveTransfer
+    ? onlySeeding
+      ? "Seeding Queue"
+      : "Transfer Queue"
+    : "Active Transfers";
   const ratio =
     Number.isFinite(Number(data?.ratio))
       ? Number(data.ratio)
@@ -176,7 +183,10 @@ function QbittorrentOpsCard({ data, fields }) {
   ];
 
   return (
-    <section aria-label="qBittorrent transfer and queue status" className="qbittorrent-ops-card">
+    <section
+      aria-label={`${sourceLabel || "Torrent client"} transfer and queue status`}
+      className="torrent-ops-card qbittorrent-ops-card"
+    >
       <dl className="qbittorrent-stat-grid">
         {queueMetrics.map((metric) => (
           <div className={`qbittorrent-stat is-${metric.key}`} key={metric.key}>
@@ -236,10 +246,10 @@ function QbittorrentOpsCard({ data, fields }) {
   );
 }
 
-function MetricFields({ data, fields, rendererName, variant }) {
+function MetricFields({ data, fields, rendererName, sourceLabel, variant }) {
   if (rendererName === "metric-pair") {
-    if (variant === "qbittorrent") {
-      return <QbittorrentOpsCard data={data} fields={fields} />;
+    if (variant === "torrent") {
+      return <TorrentOpsCard data={data} fields={fields} sourceLabel={sourceLabel} />;
     }
 
     return (
@@ -798,17 +808,19 @@ export function EnhancedWidgetRenderer({ openUrl, service, style, template, widg
   const currentStatusLabel = widget.enhancedStateStatus && widget.enhancedStateStatus !== "ok"
     ? statusLabel(widget.enhancedStateStatus)
     : "";
-  const isQbittorrentTransfer =
+  const isTorrentTransfer =
     rendererName === "metric-pair" &&
     (widget.enhancedWidgetId === "transfer-speed" ||
-      service?.typeId === "qbittorrent" ||
-      service?.iconKey === "qbittorrent" ||
-      service?.name === "qBittorrent");
+      ["qbittorrent", "transmission"].includes(service?.typeId) ||
+      ["qbittorrent", "transmission"].includes(service?.iconKey) ||
+      ["qBittorrent", "Transmission"].includes(service?.name));
 
   return (
     <div
       className={`widget-renderer widget-renderer-enhanced widget-renderer-enhanced-${rendererName} ${
-        isQbittorrentTransfer ? "widget-renderer-enhanced-qbittorrent-ops" : ""
+        isTorrentTransfer
+          ? "widget-renderer-enhanced-torrent-ops widget-renderer-enhanced-qbittorrent-ops"
+          : ""
       }`}
       style={{
         "--widget-accent": style.accentColor || service?.color || "#2f80d1",
@@ -838,7 +850,13 @@ export function EnhancedWidgetRenderer({ openUrl, service, style, template, widg
         <RecentMediaRowPreview data={data} openUrl={openUrl || service?.url} status={widget.enhancedStateStatus} />
       ) : null}
       {!["json-preview", "table", "sparkline", "storage-donut", "codex-usage", "weather-current", "recent-media-row"].includes(rendererName) ? (
-        <MetricFields data={data} fields={fields} rendererName={rendererName} variant={isQbittorrentTransfer ? "qbittorrent" : ""} />
+        <MetricFields
+          data={data}
+          fields={fields}
+          rendererName={rendererName}
+          sourceLabel={sourceLabel}
+          variant={isTorrentTransfer ? "torrent" : ""}
+        />
       ) : null}
     </div>
   );

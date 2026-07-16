@@ -1,10 +1,22 @@
 // @vitest-environment jsdom
 import { fireEvent, render } from "@testing-library/react";
+import { SiTransmission } from "react-icons/si";
 import { describe, expect, test } from "vitest";
 import "./setupTests.js";
-import { ServiceIcon } from "./iconRegistry.jsx";
+import { iconComponents, ServiceIcon } from "./iconRegistry.jsx";
 
 describe("ServiceIcon", () => {
+  test("renders Transmission with its official Simple Icons mark", () => {
+    expect(iconComponents.transmission).toBe(SiTransmission);
+
+    const { container } = render(
+      <ServiceIcon service={{ color: "#d70014", iconKey: "transmission", iconKind: "preset" }} />,
+    );
+
+    expect(container.querySelector(".service-icon")).toHaveAttribute("data-icon-key", "transmission");
+    expect(container.querySelector("svg")).not.toBeNull();
+  });
+
   test("renders Codex with the OpenAI logomark preset", () => {
     const { container } = render(
       <ServiceIcon service={{ color: "#10a37f", iconKey: "codex", iconKind: "preset" }} />,

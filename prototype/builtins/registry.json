@@ -26,6 +26,12 @@
       "name": "qnap service adapter",
       "path": "packages/service-adapters/qnap",
       "version": "0.1.0"
+    },
+    {
+      "id": "transmission",
+      "name": "transmission service adapter",
+      "path": "packages/service-adapters/transmission",
+      "version": "0.1.0"
     }
   ],
   "integrations": [
@@ -252,6 +258,26 @@
       "minHostVersion": "0.1.0",
       "replaces": [
         "qbittorrent"
+      ],
+      "version": "0.1.0"
+    },
+    {
+      "id": "transmission",
+      "name": "Transmission",
+      "description": "Download Client",
+      "category": "Download",
+      "color": "#d70014",
+      "iconKey": "transmission",
+      "aliases": [
+        "torrent",
+        "download",
+        "transmission-daemon"
+      ],
+      "apiVersion": "oh-no.dev/v1",
+      "kind": "service-type",
+      "minHostVersion": "0.1.0",
+      "replaces": [
+        "transmission"
       ],
       "version": "0.1.0"
     },

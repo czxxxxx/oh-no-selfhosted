@@ -37,12 +37,12 @@ describe("built-in plugin registry", () => {
 
     expect(result).toMatchObject({
       counts: {
-        adapterWidgets: 13,
+        adapterWidgets: 16,
         integrationWidgets: 2,
         integrations: 2,
         nativeWidgets: 9,
-        serviceAdapters: 4,
-        serviceTypes: 19,
+        serviceAdapters: 5,
+        serviceTypes: 20,
       },
       id: "oh-no-builtins",
       sourceType: "local",
@@ -64,6 +64,7 @@ describe("built-in plugin registry", () => {
       "portainer",
       "qbittorrent",
       "qnap",
+      "transmission",
     ]);
     expect(result.contributions.integrations.map((integration) => integration.id).sort()).toEqual([
       "codex-usage",

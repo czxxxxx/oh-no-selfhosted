@@ -113,6 +113,15 @@ const CURATED_SERVICE_TYPES = [
     aliases: ["qbit", "torrent", "download"],
   },
   {
+    id: "transmission",
+    name: "Transmission",
+    description: "Download Client",
+    category: "Download",
+    color: "#d70014",
+    iconKey: "transmission",
+    aliases: ["torrent", "download", "transmission-daemon"],
+  },
+  {
     id: "paperless-ngx",
     name: "Paperless-ngx",
     description: "Document Mgmt",

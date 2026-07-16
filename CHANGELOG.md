@@ -4,6 +4,13 @@ Significant changes will be documented here until automated GitHub Releases beco
 
 ## Unreleased
 
+## 0.1.4 - 2026-07-16
+
+- Added Transmission as a built-in download service with its official mark and enhanced transfer, torrent, and queue widgets matching the qBittorrent experience.
+- Added Transmission JSON-RPC 2.0 and legacy RPC support, including session-ID negotiation, optional Basic authentication, endpoint normalization, and live verification against Transmission 4.0.6.
+- Restored bundled service-icon fallbacks and the QNAP and Snapdrop service marks.
+- Added validated SVG service-icon uploads that rasterize safe SVGs and reject active or external content.
+
 ## 0.1.3 - 2026-07-12
 
 - Fixed installed built-in service adapters being blocked after moving from a source checkout to the global npm package path.

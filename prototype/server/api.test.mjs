@@ -1434,8 +1434,8 @@ export function EndpointStatusWidget({ data, onRefresh }) {
         counts: {
           integrations: 2,
           nativeWidgets: 9,
-          serviceAdapters: 4,
-          serviceTypes: 19,
+          serviceAdapters: 5,
+          serviceTypes: 20,
         },
         status: "verified",
       },
