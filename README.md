@@ -111,7 +111,7 @@ cd prototype
 npm ci
 npm run pack:check
 npm run pack:local
-npm install -g ./oh-no-selfhosted-0.1.2.tgz
+npm install -g ./oh-no-selfhosted-0.1.4.tgz
 oh-no-selfhosted setup
 oh-no-selfhosted start
 ```

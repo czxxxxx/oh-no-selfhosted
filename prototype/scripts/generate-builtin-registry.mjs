@@ -7,7 +7,7 @@ import { BASE_WIDGET_TEMPLATES } from "../src/widgetTemplates.js";
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const builtinsRoot = join(projectRoot, "builtins");
 const packagesRoot = join(builtinsRoot, "packages");
-const adapterIds = ["jellyfin", "portainer", "qbittorrent", "qnap"];
+const adapterIds = ["jellyfin", "portainer", "qbittorrent", "qnap", "transmission"];
 const integrationIds = ["codex-usage", "weather"];
 const systemWidgetIds = new Set([
   "download-stats",

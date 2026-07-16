@@ -1,0 +1,48 @@
+{
+  "apiVersion": "oh-no.dev/v1",
+  "id": "transmission",
+  "name": "Transmission Enhanced",
+  "version": "0.1.0",
+  "serviceTypes": [
+    "transmission"
+  ],
+  "description": "Transfer speed, torrent list, and queue health.",
+  "entry": "adapter.mjs",
+  "widgets": "widgets.json",
+  "configSchema": [
+    {
+      "key": "baseUrl",
+      "label": "Endpoint URL",
+      "type": "url",
+      "required": true,
+      "defaultFromService": "url"
+    },
+    {
+      "key": "username",
+      "label": "Username",
+      "type": "text"
+    },
+    {
+      "key": "password",
+      "label": "Password",
+      "type": "password"
+    },
+    {
+      "key": "pollIntervalSeconds",
+      "label": "Poll interval",
+      "type": "number",
+      "default": 5,
+      "min": 2
+    }
+  ],
+  "capabilities": [
+    "network",
+    "service-state"
+  ],
+  "dependencies": {},
+  "kind": "service-adapter",
+  "minHostVersion": "0.1.0",
+  "replaces": [
+    "transmission"
+  ]
+}

@@ -146,6 +146,63 @@ describe("EnhancedWidgetRenderer", () => {
     expect(transferCard).toHaveTextContent("8.3 TB");
   });
 
+  test("renders Transmission with the shared torrent operations card", () => {
+    const { container } = render(
+      <EnhancedWidgetRenderer
+        service={{
+          color: "#d70014",
+          iconKey: "transmission",
+          iconKind: "preset",
+          name: "Transmission",
+          typeId: "transmission",
+        }}
+        style={{ accentColor: "#d70014", backgroundOpacity: 0.76, radius: 20 }}
+        template={{ name: "Transfer Speed" }}
+        widget={{
+          enhancedData: {
+            activeTorrents: [
+              {
+                downloadedBytes: 1073741824,
+                downloadSpeed: 0,
+                name: "Fedora-Workstation-Live-x86_64",
+                progress: 41.5,
+                ratio: 0.2,
+                state: "queuedDownload",
+                status: "Queued download",
+                totalBytes: 2684354560,
+                uploadSpeed: 0,
+              },
+            ],
+            downloadSpeed: 0,
+            downloading: 1,
+            paused: 0,
+            peers: 8,
+            seeding: 0,
+            totalDownloaded: 5368709120,
+            totalUploaded: 1073741824,
+            uploadSpeed: 0,
+          },
+          enhancedRenderer: {
+            fields: [
+              { format: "bytesPerSecond", key: "downloadSpeed", label: "Download" },
+              { format: "bytesPerSecond", key: "uploadSpeed", label: "Upload" },
+            ],
+            renderer: "metric-pair",
+          },
+          enhancedWidgetId: "transfer-speed",
+          title: "Transmission Transfer Speed",
+        }}
+      />,
+    );
+
+    expect(container.firstChild).toHaveClass("widget-renderer-enhanced-torrent-ops");
+    expect(container.querySelector(".torrent-ops-card")).toHaveAccessibleName(
+      "Transmission transfer and queue status",
+    );
+    expect(container.querySelector(".torrent-ops-card")).toHaveTextContent("Transfer Queue");
+    expect(container.querySelector("[data-icon-key='transmission']")).not.toBeNull();
+  });
+
   test("renders storage usage as a pie-only accessible donut chart", () => {
     render(
       <EnhancedWidgetRenderer

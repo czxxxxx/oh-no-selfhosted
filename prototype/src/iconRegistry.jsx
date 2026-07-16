@@ -13,6 +13,7 @@ import {
   SiQbittorrent,
   SiQnap,
   SiSyncthing,
+  SiTransmission,
   SiVaultwarden,
 } from "react-icons/si";
 
@@ -79,6 +80,7 @@ export const iconComponents = {
   router: FiWifi,
   snapdrop: SnapdropIcon,
   syncthing: SiSyncthing,
+  transmission: SiTransmission,
   "uptime-kuma": FiActivity,
   vaultwarden: SiVaultwarden,
   weather: FiCloud,

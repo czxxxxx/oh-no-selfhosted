@@ -7,6 +7,12 @@ describe("service catalog", () => {
       iconKey: "qbittorrent",
       name: "qBittorrent",
     });
+    expect(SERVICE_TYPES.find((type) => type.id === "transmission")).toMatchObject({
+      category: "Download",
+      color: "#d70014",
+      iconKey: "transmission",
+      name: "Transmission",
+    });
     expect(SERVICE_TYPES.find((type) => type.id === "jellyfin")).toMatchObject({
       category: "Media",
       name: "Jellyfin",

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "transfer-speed",
+    "name": "Transfer Speed",
+    "description": "Download, upload, queue, and active transfer card.",
+    "defaultLayout": { "w": 6, "h": 3 },
+    "minLayout": { "w": 6, "h": 3 },
+    "refreshIntervalSeconds": 5,
+    "dataPath": "transfer",
+    "renderer": "metric-pair",
+    "fields": [
+      { "key": "downloadSpeed", "label": "Download", "format": "bytesPerSecond" },
+      { "key": "uploadSpeed", "label": "Upload", "format": "bytesPerSecond" }
+    ]
+  },
+  {
+    "id": "active-torrents",
+    "name": "Active Torrents",
+    "description": "Seeding, downloading, paused, and peers.",
+    "defaultLayout": { "w": 4, "h": 2 },
+    "minLayout": { "w": 3, "h": 2 },
+    "dataPath": "torrents",
+    "renderer": "metric-list",
+    "fields": [
+      { "key": "seeding", "label": "Seeding", "format": "number" },
+      { "key": "downloading", "label": "Downloading", "format": "number" },
+      { "key": "paused", "label": "Paused", "format": "number" },
+      { "key": "peers", "label": "Peers", "format": "number" }
+    ]
+  },
+  {
+    "id": "queue-health",
+    "name": "Queue Health",
+    "description": "RPC connection and disk availability.",
+    "defaultLayout": { "w": 4, "h": 2 },
+    "minLayout": { "w": 3, "h": 2 },
+    "dataPath": "summary",
+    "renderer": "status-summary",
+    "fields": [
+      { "key": "connectionStatus", "label": "Connection", "format": "text" },
+      { "key": "freeSpace", "label": "Free space", "format": "bytes" }
+    ]
+  }
+]

@@ -15,6 +15,18 @@ describe("buildServiceEnhancedWidgetTemplates", () => {
     });
   });
 
+  test("keeps the Transmission transfer speed widget aligned with qBittorrent", async () => {
+    const widgetsPath = fileURLToPath(new URL("./builtins/transmission/widgets.json", import.meta.url));
+    const widgets = JSON.parse(await readFile(widgetsPath, "utf8"));
+    const transferSpeedWidget = widgets.find((widget) => widget.id === "transfer-speed");
+
+    expect(transferSpeedWidget).toMatchObject({
+      defaultLayout: { h: 3, w: 6 },
+      minLayout: { h: 3, w: 6 },
+      renderer: "metric-pair",
+    });
+  });
+
   test("uses current built-in widget definitions for installed built-in adapters", () => {
     const store = {
       getServiceEnhancement() {

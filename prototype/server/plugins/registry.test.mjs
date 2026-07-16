@@ -45,12 +45,15 @@ describe("unified plugin registry", () => {
     );
 
     expect(result.index).toMatchObject({
-      apps: expect.arrayContaining([expect.objectContaining({ id: "qbittorrent" })]),
+      apps: expect.arrayContaining([
+        expect.objectContaining({ id: "qbittorrent" }),
+        expect.objectContaining({ id: "transmission" }),
+      ]),
       integrations: expect.arrayContaining([expect.objectContaining({ id: "weather" })]),
       name: "Oh No Built-ins",
       widgets: [{ id: "oh-no.core-widgets", path: "packages/widgets/oh-no.core-widgets", version: "0.1.0", name: "Oh No Core Widgets", requires: [] }],
     });
-    expect(result.index.serviceTypes).toHaveLength(19);
+    expect(result.index.serviceTypes).toHaveLength(20);
     expect(manifest).toMatchObject({ id: "oh-no.core-widgets", kind: "widget", registration: "native" });
   });
 

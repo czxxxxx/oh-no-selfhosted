@@ -8,6 +8,7 @@ const jellyfinDir = join(__dirname, "builtins", "jellyfin");
 const portainerDir = join(__dirname, "builtins", "portainer");
 const qbitDir = join(__dirname, "builtins", "qbittorrent");
 const qnapDir = join(__dirname, "builtins", "qnap");
+const transmissionDir = join(__dirname, "builtins", "transmission");
 
 function createFakeSnmp({ scalarValues = {}, subtreeValues = {} } = {}) {
   const calls = [];
@@ -187,6 +188,217 @@ describe("enhanced adapter runtime", () => {
         uploadSpeed: 1782579,
       },
     });
+  });
+
+  test("negotiates the Transmission session id with optional basic auth", async () => {
+    const fetchImpl = vi.fn(async (url, options = {}) => {
+      expect(String(url)).toBe("http://192.0.2.30:9091/transmission/rpc");
+      expect(options.headers.authorization).toBe("Basic dHJhbnNtaXNzaW9uOnNlY3JldA==");
+
+      if (!options.headers["x-transmission-session-id"]) {
+        return new Response(null, {
+          headers: { "x-transmission-session-id": "transmission-session-1" },
+          status: 409,
+        });
+      }
+
+      expect(options.headers["x-transmission-session-id"]).toBe("transmission-session-1");
+      const request = JSON.parse(options.body);
+
+      expect(request).toMatchObject({ jsonrpc: "2.0", method: "session_get" });
+
+      return Response.json({
+        id: request.id,
+        jsonrpc: "2.0",
+        result: { version: "4.1.0" },
+      });
+    });
+    const runtime = createAdapterRuntime({ fetchImpl, logger: console });
+
+    await expect(
+      runtime.testAdapter({
+        adapterPath: join(transmissionDir, "adapter.mjs"),
+        config: {
+          baseUrl: "http://192.0.2.30:9091/transmission/web/",
+          password: "secret",
+          username: "transmission",
+        },
+        service: {
+          id: "service-transmission",
+          name: "Transmission",
+          url: "http://192.0.2.30:9091/transmission/web/",
+        },
+      }),
+    ).resolves.toMatchObject({ ok: true, message: expect.stringMatching(/4\.1\.0.*reachable/i) });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  test("fetches normalized Transmission JSON-RPC state", async () => {
+    const fetchImpl = vi.fn(async (url, options = {}) => {
+      expect(String(url)).toBe("http://192.0.2.30:9091/transmission/rpc");
+
+      if (!options.headers["x-transmission-session-id"]) {
+        return new Response(null, {
+          headers: { "x-transmission-session-id": "transmission-session-2" },
+          status: 409,
+        });
+      }
+
+      const request = JSON.parse(options.body);
+
+      if (request.method === "session_get") {
+        return Response.json({
+          id: request.id,
+          jsonrpc: "2.0",
+          result: { download_dir: "/downloads", version: "4.1.0" },
+        });
+      }
+
+      if (request.method === "session_stats") {
+        return Response.json({
+          id: request.id,
+          jsonrpc: "2.0",
+          result: {
+            cumulative_stats: { downloaded_bytes: 5000, uploaded_bytes: 10000 },
+            download_speed: 8808038,
+            upload_speed: 1782579,
+          },
+        });
+      }
+
+      if (request.method === "torrent_get") {
+        expect(request.params.fields).toEqual(expect.arrayContaining(["percent_done", "rate_download"]));
+
+        return Response.json({
+          id: request.id,
+          jsonrpc: "2.0",
+          result: {
+            torrents: [
+              {
+                downloaded_ever: 1024,
+                eta: 720,
+                name: "Planet.Earth.III.S01",
+                peers_connected: 3,
+                percent_done: 0.5,
+                rate_download: 1,
+                rate_upload: 2,
+                status: 4,
+                total_size: 2048,
+                upload_ratio: 0.36,
+              },
+              {
+                downloaded_ever: 4096,
+                eta: -1,
+                name: "Ubuntu 24.04.1 Desktop amd64.iso",
+                peers_connected: 4,
+                percent_done: 1,
+                rate_download: 0,
+                rate_upload: 4,
+                status: 6,
+                total_size: 4096,
+                upload_ratio: 2.35,
+              },
+              {
+                name: "Paused archive",
+                peers_connected: 0,
+                percent_done: 0.25,
+                rate_download: 0,
+                rate_upload: 0,
+                status: 0,
+              },
+            ],
+          },
+        });
+      }
+
+      if (request.method === "free_space") {
+        expect(request.params).toEqual({ path: "/downloads" });
+
+        return Response.json({
+          id: request.id,
+          jsonrpc: "2.0",
+          result: { path: "/downloads", size_bytes: 2048 },
+        });
+      }
+
+      return new Response("missing", { status: 404 });
+    });
+    const runtime = createAdapterRuntime({ fetchImpl, logger: console });
+
+    await expect(
+      runtime.fetchAdapterState({
+        adapterPath: join(transmissionDir, "adapter.mjs"),
+        config: { baseUrl: "http://192.0.2.30:9091" },
+        service: {
+          id: "service-transmission",
+          name: "Transmission",
+          url: "http://192.0.2.30:9091",
+        },
+      }),
+    ).resolves.toMatchObject({
+      summary: { connectionStatus: "connected", freeSpace: 2048 },
+      torrents: { downloading: 1, paused: 1, peers: 7, seeding: 1 },
+      transfer: {
+        activeTorrents: [
+          {
+            name: "Ubuntu 24.04.1 Desktop amd64.iso",
+            progress: 100,
+            state: "seeding",
+            status: "Seeding",
+            uploadSpeed: 4,
+          },
+          {
+            downloadedBytes: 1024,
+            downloadSpeed: 1,
+            name: "Planet.Earth.III.S01",
+            progress: 50,
+            ratio: 0.36,
+            state: "downloading",
+            status: "Downloading",
+            totalBytes: 2048,
+          },
+        ],
+        downloadSpeed: 8808038,
+        ratio: 2,
+        totalDownloaded: 5000,
+        totalUploaded: 10000,
+        uploadSpeed: 1782579,
+      },
+    });
+  });
+
+  test("falls back to Transmission's legacy RPC protocol", async () => {
+    const methods = [];
+    const fetchImpl = vi.fn(async (url, options = {}) => {
+      const request = JSON.parse(options.body);
+      methods.push(request.method);
+
+      if (request.method === "session_get") {
+        return Response.json({ arguments: {}, result: "method name not recognized" });
+      }
+
+      if (request.method === "session-get") {
+        return Response.json({
+          arguments: { version: "4.0.6" },
+          result: "success",
+          tag: request.tag,
+        });
+      }
+
+      return new Response("missing", { status: 404 });
+    });
+    const runtime = createAdapterRuntime({ fetchImpl, logger: console });
+
+    await expect(
+      runtime.testAdapter({
+        adapterPath: join(transmissionDir, "adapter.mjs"),
+        config: { baseUrl: "http://192.0.2.30:9091/transmission/rpc" },
+        service: { id: "service-transmission", name: "Transmission" },
+      }),
+    ).resolves.toMatchObject({ ok: true, message: expect.stringMatching(/4\.0\.6.*reachable/i) });
+
+    expect(methods).toEqual(["session_get", "session-get"]);
   });
 
   test("runs QNAP SNMPv3 noAuthNoPriv without requiring passwords", async () => {
