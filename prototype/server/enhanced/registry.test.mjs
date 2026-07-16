@@ -57,14 +57,14 @@ describe("enhanced registry", () => {
       expect.arrayContaining([
         expect.objectContaining({
           manifest: expect.objectContaining({ id: "qbittorrent" }),
-          sourceType: "local",
+          sourceType: "built-in",
         }),
         expect.objectContaining({
           manifest: expect.objectContaining({
             id: "portainer",
             serviceTypes: ["portainer"],
           }),
-          sourceType: "local",
+          sourceType: "built-in",
           widgets: expect.arrayContaining([
             expect.objectContaining({ id: "container-summary" }),
             expect.objectContaining({ id: "container-list" }),
@@ -75,7 +75,7 @@ describe("enhanced registry", () => {
             id: "qnap",
             serviceTypes: ["qnap"],
           }),
-          sourceType: "local",
+          sourceType: "built-in",
           widgets: expect.arrayContaining([
             expect.objectContaining({ id: "system-overview" }),
             expect.objectContaining({ id: "storage-summary" }),
@@ -86,7 +86,7 @@ describe("enhanced registry", () => {
             id: "jellyfin",
             serviceTypes: ["jellyfin"],
           }),
-          sourceType: "local",
+          sourceType: "built-in",
           widgets: expect.arrayContaining([
             expect.objectContaining({ id: "recently-added", renderer: "recent-media-row" }),
           ]),

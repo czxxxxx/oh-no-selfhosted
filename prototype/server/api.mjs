@@ -1430,7 +1430,7 @@ export function createApiHandler({
           throw error;
         }
 
-        sendJson(response, 201, { adapter });
+        sendJson(response, 201, { adapter: { ...adapter, installed: true } });
         return;
       }
 

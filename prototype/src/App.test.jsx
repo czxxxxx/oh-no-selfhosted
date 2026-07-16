@@ -1698,6 +1698,42 @@ describe("Homelab navigation dashboard", () => {
     expect(widgetLink).toHaveAttribute("rel", expect.stringContaining("noopener"));
   });
 
+  test("keeps built-in enhanced adapters available when external registries are disabled", async () => {
+    const user = userEvent.setup();
+    const baseFetch = global.fetch;
+
+    global.fetch = vi.fn(async (url, options = {}) => {
+      if (url === "/api/enhanced/registry-sources" && !options.method) {
+        return Response.json({ externalPluginsEnabled: false, sources: [] });
+      }
+
+      return baseFetch(url, options);
+    });
+
+    render(<App />);
+    await user.click(await screen.findByRole("button", { name: /open services launchpad/i }));
+    await openServiceSettingsFromLaunchpad(user);
+    const dialog = await screen.findByRole("dialog", { name: /service settings/i });
+    await user.click(within(dialog).getByRole("tab", { name: /enhanced/i }));
+
+    const registry = await screen.findByRole("complementary", { name: /enhanced registry/i });
+    expect(within(registry).getByRole("status")).toHaveTextContent(/built-in adapters remain available/i);
+
+    const installButton = within(registry).getByRole("button", { name: /install qbittorrent enhanced/i });
+    expect(installButton).toBeEnabled();
+    await user.click(installButton);
+
+    const installCall = global.fetch.mock.calls.find(
+      ([url, options]) => url === "/api/enhanced/adapters/install" && options?.method === "POST",
+    );
+    expect(JSON.parse(installCall[1].body)).toMatchObject({
+      adapterId: "qbittorrent",
+      sourceType: "built-in",
+    });
+    expect(within(registry).getByRole("button", { name: /update qbittorrent enhanced/i })).toBeEnabled();
+    expect(within(registry).getByRole("button", { name: /uninstall qbittorrent enhanced/i })).toBeEnabled();
+  });
+
   test("opens service settings and configures qBittorrent enhanced mode", async () => {
     const user = userEvent.setup();
 

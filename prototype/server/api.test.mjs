@@ -76,6 +76,28 @@ describe("service API", () => {
     });
   });
 
+  test("keeps built-in enhanced adapters installable when external plugins are disabled", async () => {
+    server = await listen(createServerApiHandler({ dataDir, store }));
+    const listResponse = await fetch(`${server.baseUrl}/api/enhanced/adapters`);
+    const listPayload = await listResponse.json();
+    const transmission = listPayload.adapters.find((adapter) => adapter.id === "transmission");
+
+    expect(listResponse.status).toBe(200);
+    expect(listPayload.externalPluginsEnabled).toBe(false);
+    expect(transmission).toMatchObject({ installed: false, sourceType: "built-in" });
+
+    const installResponse = await fetch(`${server.baseUrl}/api/enhanced/adapters/install`, {
+      body: JSON.stringify({ adapterId: transmission.id, sourceType: transmission.sourceType }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    });
+
+    expect(installResponse.status).toBe(201);
+    await expect(installResponse.json()).resolves.toMatchObject({
+      adapter: { id: "transmission", installed: true, sourceType: "built-in" },
+    });
+  });
+
   test("lists service types and starts with no user services", async () => {
     server = await listen(createApiHandler({ dataDir, store }));
 
@@ -1134,7 +1156,7 @@ export async function readState(config, context) {
 
     expect(installResponse.status).toBe(201);
     await expect(installResponse.json()).resolves.toMatchObject({
-      adapter: { id: "qbittorrent", sourceType: "local" },
+      adapter: { id: "qbittorrent", installed: true, sourceType: "built-in" },
     });
   });
 
